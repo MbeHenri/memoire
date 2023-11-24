@@ -1,0 +1,9 @@
+
+# fichiers tempon de python
+*__pycache*
+
+# datasets 
+datasets/bbcsport*
+datasets/multiple+features*
+datasets/reutersEN*
+datasets/load_to*
