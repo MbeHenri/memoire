@@ -4,29 +4,35 @@ from utils.vote import vote
 from numpy import array, ones, unique, nan
 
 from utils.gnps.gnps import load_data_gnps, gnps, gnps_clusters
-from utils.madbyte.madbyte import load_data_madbyte, madbyte, madbyte_clusters
+from utils.madbyte.madbyte import preprocessing_madbyte, madbyte, load_network_madbyte, load_rmn_data_for_ml, madbyte_clusters
 from utils.preprocessingml import preprocessing_for_mc
 
 import random
 
-def bagging(k, typeweak="mcles"):
+def bagging(k, pathdirRMN ="rmn", pathdirMS="ms", pathdirTemp="temp", typeweak="mcles"):
     
-    # chargement des données MS de molécules
+    # chargement des données MS de molécules (branche 1)
     data_gnps = load_data_gnps()
-    # chargement des données RMN de molécules
-    data_madbyte = load_data_madbyte()
     
-    # construction du reseau de gnps
+    # chargement des données RMN de molécules (branche 2)
+    temp_dir_rmn = f"{pathdirTemp}/madbyte"
+    # prétraitement et calcul des systèmes de spin de madbyte
+    preprocessing_madbyte(pathdirRMN, temp_dir_rmn)
+    # chargment proprement dit (branche 2.1)
+    data_madbyte = load_rmn_data_for_ml(pathdirRMN, temp_dir_rmn)
+    
+    # construction du reseau de gnps (branche 1)
     network_gnps = gnps(data_gnps)
-    # construction du reseau de madbyte
-    network_madbyte = madbyte(data_madbyte)
+    # construction du reseau de madbyte (branche 2.2)
+    madbyte(temp_dir_rmn)
+    network_madbyte = load_network_madbyte(temp_dir_rmn)
     
-    # pretraitement des données MS et RMN de molecules
+    # pretraitement des données MS et RMN de molecules (branche 2.1 + branche 1)
     dataforml = preprocessing_for_mc(data_gnps, data_madbyte)
     
     # construction des etiquetes issues de madbyte et gnps
-    labels_gnps = gnps_clusters(network_gnps)
-    labels_madbyte = madbyte_clusters(network_madbyte)
+    labels_gnps = gnps_clusters(network_gnps, dataforml["names"])
+    labels_madbyte = madbyte_clusters(network_madbyte, dataforml["names"])
     params_gnps = None
     params_madbyte = None
     if labels_gnps != None:
@@ -35,7 +41,7 @@ def bagging(k, typeweak="mcles"):
         params_madbyte = {"labels": labels_madbyte}
         
     # calcul des etiquetes de clusters
-    labels = bagging_prime(dataforml, k, typeweak=typeweak, params_gnps=params_gnps, params_madbyte=params_madbyte)
+    labels = bagging_prime(dataforml["X"], k, typeweak=typeweak, params_gnps=params_gnps, params_madbyte=params_madbyte)
     
     return network_gnps, network_madbyte, labels
 

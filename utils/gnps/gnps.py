@@ -8,7 +8,7 @@ def ms_preprocessing():
     pass
     
 #
-def gnps_clusters(G):
+def gnps_clusters(G, names_mols):
     pass
 
 #
