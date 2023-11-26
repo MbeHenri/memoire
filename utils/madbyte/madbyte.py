@@ -3,6 +3,7 @@ from source.core import construct_spin_system, construct_correlation_matrix, cre
 import networkx as nx
 import pandas as pd
 import json
+from numpy import zeros, nan
 
 #> prétraitement et calcul des systèmes de spin de madbyte
 def preprocessing_madbyte(input_dir, output_dir):
@@ -34,7 +35,7 @@ def madbyte(output_dir):
 
 
 #> chargement du reseau moleculaire de madbyte
-def load_network_madbyte(output_dir, type="all"):
+def load_network_madbyte(output_dir, type="hybrid"):
     G = None
     if type == "all":
         G = nx.read_graphml(
@@ -84,4 +85,21 @@ def load_rmn_data_for_ml(input_dir, output_dir):
     
 # > construction des clusters à partir du réseau moléculaire de madbyte
 def madbyte_clusters(G, names_mols):
-    pass
+    # calcul des composantes connexes du réseau qui constituent les clusters de molécules
+    clusters_mol = {}
+    k=0
+    for component in nx.connected_components(G):
+        for node in component:
+            if G.nodes[node]["_type"] == "standard":
+                clusters_mol[node] = k
+        k = k + 1
+    
+    n = len(names_mols)
+    mols = zeros(n)
+    for i in range(n):
+        try:
+            mols[i] = clusters_mol[names_mols[i]]
+        except :
+            mols[i] = nan
+            
+    return mols

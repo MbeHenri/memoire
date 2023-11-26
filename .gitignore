@@ -7,3 +7,5 @@ datasets/bbcsport*
 datasets/multiple+features*
 datasets/reutersEN*
 datasets/load_to*
+
+test*graphml
