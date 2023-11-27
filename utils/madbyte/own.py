@@ -1,119 +1,27 @@
 from os import mkdir, listdir
-from networkx import Graph, write_graphml,read_graphml, connected_components
-from pandas import read_json, DataFrame
+from networkx import read_graphml, connected_components
+from pandas import DataFrame
 from json import loads
 from numpy import zeros, nan
-from pathlib import Path
 
-from .madbyte.core import construct_spin_system, construct_correlation_matrix, create_outputs
-from .madbyte.utils import trim_associations, hybridize_network, combinations, partition
+from .madbyte import spin_system_construction, generate_network, correlation_matrix_generation
 
 #> prétraitement et calcul des systèmes de spin de madbyte
-def preprocessing_madbyte(input_dir, output_dir):
+def preprocessing_madbyte(input_dir, output_dir, entity="Extract", solvent="DMSO-D6", nmr_data_type="CSV", hppm_error = 0.05, tocsy_error=0.05):
     try:
         mkdir(f'{output_dir}')
     except FileExistsError:
         pass
-
-    list_samples = []
-    for item in listdir(input_dir):
-        list_samples.append(item)
-        try:
-            mkdir(f'{output_dir}/{item}')
-        except FileExistsError:
-            pass
-
-    # construction des ensembles de déplacements(système de spin) par molécule
-    for name in list_samples:
-        construct_spin_system(
-            name, input_dir, f'{output_dir}/{name}', nmr_data_type="CSV")
+    sample_list = listdir(input_dir)
+    spin_system_construction(sample_list, input_dir, nmr_data_type, entity, hppm_error, tocsy_error, output_dir, solvent=solvent)
 
 #> construction des reseaux moléculaires de madbyte
-def madbyte(output_dir):
-    # construction de la matrice de correlation entre les ensembles de déplacmements
-    construct_correlation_matrix(output_dir)
-
+def madbyte(output_dir, fname="madbyte", hppm_error = 0.05, cppm_error=0.5, threshold=0.5, colors = {"spin": "#d3d7cf", "extract": "#ff3333", "standard": "#0ffbff"}):
+    # construction de la matrice de correlation entre les ensembles de déplacemements
+    correlation_matrix_generation(hppm_error, cppm_error, output_dir)
+    
     # construction des reseaux moleculaires
-    create_outputs(output_dir, fname="madbyte")
-
-def association_network(
-    project_dir,
-    fname,
-    corr_mat,
-    master,
-    colors,
-    cutoff=0.5,
-    hppm_error=0.05,
-    cppm_error=0.5,
-    max_system_size=20,
-):
-    master = master.loc[master['Members'].apply(lambda x: len(x) < max_system_size)]
-    idxs = master.Spin_System_ID.tolist()
-    systems = [(row.Spin_System_ID, {"members": str(row.Members)}) for row in master.itertuples()]
-    extracts = master.Found_In.unique()
-    standards, samples = partition(lambda x: x.startswith("HND_"), extracts)
-    idx_master = master.set_index("Spin_System_ID", drop=True)
-
-    def get_weight(x,y):
-        # Get max value from two ids
-        return float(max(corr_mat.loc[x,y], corr_mat.loc[y,x]))
-
-    def same_sample(x,y):
-        # tells whether two spin system are from the sample sample
-        # based on matching of first 7 char of id
-        return idx_master.loc[x, 'Found_In'] == idx_master.loc[y, 'Found_In']
-
-    # Determine edges
-    # Edges from extract to systems
-    extract_edges = [(row.Spin_System_ID, row.Found_In) for row in master.itertuples()]
-    spinsystem_edges = [
-        (x,y,get_weight(x,y)) for x,y in combinations(idxs, r=2)
-        if get_weight(x, y) >= cutoff and not same_sample(x,y)
-    ]
-
-    # network building
-    G = Graph()
-    G.add_nodes_from(systems, _color=colors['spin'], _type="spin")
-    G.add_nodes_from(samples, _color=colors['extract'], _type="extract")
-    G.add_nodes_from(standards, _color=colors['standard'], _type="standard")
-    G.add_edges_from(extract_edges, weight=1.0)
-    G.add_weighted_edges_from(spinsystem_edges)
-    write_graphml(G, project_dir.joinpath(f"{fname}_association_network_all.graphml"))
-    try: 
-        # Filters unconnected
-        H = trim_associations(G)
-        # write_graphml(G, project_dir.joinpath("test_2.graphml")
-        write_graphml(H, project_dir.joinpath(f"{fname}_similarity_network_network.graphml"))
-    except: 
-        print('Cannot Generate Similarity Network. \n If more than one sample was run, no similarities were found. \n If only was sample was run, please increase the number of samples to compare to in order to generate a similarity network.')
-    try: 
-        # Join connected associations
-        J = hybridize_network(H,idx_master, colors, hppm_error, cppm_error)
-        write_graphml(J, project_dir.joinpath(f"{fname}_hybrid_network.graphml"))
-    except: 
-        print('Cannot Generate Hybrid Network.')
-        
-def create_outputs(
-    project_dir,
-    fname="MADByTE",
-    threshold=0.5,
-    hppm_error=0.05,
-    cppm_error=0.5,
-    colors=None,
-    max_system_size=20,
-):
-    if not colors:
-        colors = {
-            "spin": "#009999", # GREY
-            "extract": "#ff3333", # RED
-            "standard": "#0FFBFF", # Black
-        }
-    project_dir = Path(project_dir)
-    corr_mat = read_json(project_dir.joinpath("correlation_matrix.json"))
-    master = read_json(project_dir.joinpath("Spin_Systems_Master.json"), precise_float=True)
-    association_network(project_dir, fname, corr_mat, master, colors, cutoff=threshold, hppm_error=hppm_error,
-        cppm_error=cppm_error,max_system_size=max_system_size,)
-
+    generate_network(output_dir,threshold,fname,cppm_error,hppm_error, colors)
 
 #> chargement du reseau moleculaire de madbyte
 def load_network_madbyte(output_dir,name="madbyte", type="all"):

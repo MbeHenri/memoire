@@ -25,7 +25,7 @@ def bagging(k, pathdirRMN ="rmn", pathdirMS="ms", output_dir="temp", typeweak="m
     # construction du reseau de gnps (branche 1)
     network_gnps = gnps(data_gnps)
     # construction des reseaux de madbyte (branche 2.2)
-    madbyte(output_dir_rmn)
+    madbyte(output_dir_rmn, fname="madbyte")
     network_madbyte_all = load_network_madbyte(output_dir_rmn, name="madbyte", type="all")
     network_madbyte_sim = load_network_madbyte(output_dir_rmn, name="madbyte", type="sim")
     network_madbyte_hybrid = load_network_madbyte(output_dir_rmn, name="madbyte", type="hybrid")

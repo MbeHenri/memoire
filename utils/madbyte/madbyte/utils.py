@@ -371,7 +371,7 @@ def build_spin_systems(tocsy, hsqc, name, out_dir, tolerance=0.05):
         f.write(json.dumps(spin_systems, indent=4))
     return spin_systems
 
-
+#![Modif]! Mise a jour
 def add_spin_systems_to_master(name, spin_systems, master):
     # Save some time by returning early if no spin systems
     if not spin_systems:
@@ -382,7 +382,10 @@ def add_spin_systems_to_master(name, spin_systems, master):
             for k,v in spin_systems.items()
         ]
     )
-    output = master.append(data, ignore_index=True, sort=False).\
+#    output = master.append(data, ignore_index=True, sort=False).\
+#        drop_duplicates("Spin_System_ID", keep="last").\
+#        reset_index(drop=True)
+    output = pd.concat([master, data], ignore_index=True, sort=False).\
         drop_duplicates("Spin_System_ID", keep="last").\
         reset_index(drop=True)
     return output
@@ -456,7 +459,7 @@ def compute_corr_matrix(df, h_tol=0.05, c_tol=0.5):
 
     return mat
 
-
+#![Modif]! problème de version
 def ratio_two_systems(idx, idy, df, h_tol, c_tol):
     if idx == idy:
         return 1.0
@@ -466,9 +469,14 @@ def ratio_two_systems(idx, idy, df, h_tol, c_tol):
     protons = x_df.groupby("H_ppm")
     denom = len(protons)
     for h, grp in protons:
-        matching = -y_df[(y_df.H_ppm.between(h-h_tol,h+h_tol,inclusive=False))
+#        matching = -y_df[(y_df.H_ppm.between(h-h_tol,h+h_tol,inclusive=False))
+#                     &(np.logical_or.reduce(
+#                        [y_df.C_ppm.between(c-c_tol,c+c_tol,inclusive=False) for c in grp.C_ppm]
+#                        ))
+#                     ].empty
+        matching = -y_df[(y_df.H_ppm.between(h-h_tol,h+h_tol,inclusive="neither"))
                      &(np.logical_or.reduce(
-                        [y_df.C_ppm.between(c-c_tol,c+c_tol,inclusive=False) for c in grp.C_ppm]
+                        [y_df.C_ppm.between(c-c_tol,c+c_tol,inclusive="neither") for c in grp.C_ppm]
                         ))
                      ].empty
         if not matching:

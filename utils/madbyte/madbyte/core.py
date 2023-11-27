@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import utils
+from . import utils
 from .filter import Filter, SOLVENT_DICT
 from .logging import get_logger
 from .parsers import acd_sim_parser, mestrenova_parser, topspin_parser,csv_parser,jeol_parser
