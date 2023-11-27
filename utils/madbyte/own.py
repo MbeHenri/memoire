@@ -2,10 +2,11 @@ from os import mkdir, listdir
 from networkx import Graph, write_graphml,read_graphml, connected_components
 from pandas import read_json, DataFrame
 from json import loads
-from madbyte.core import construct_spin_system, construct_correlation_matrix, create_outputs
-from madbyte.utils import trim_associations, hybridize_network, combinations, partition
 from numpy import zeros, nan
 from pathlib import Path
+
+from .madbyte.core import construct_spin_system, construct_correlation_matrix, create_outputs
+from .madbyte.utils import trim_associations, hybridize_network, combinations, partition
 
 #> prétraitement et calcul des systèmes de spin de madbyte
 def preprocessing_madbyte(input_dir, output_dir):
@@ -165,8 +166,7 @@ def load_rmn_data_for_ml(input_dir, output_dir):
     return df_2drmn
     
 # > construction des clusters à partir du réseau moléculaire de madbyte
-def madbyte_clusters(G, names_mols):
-    # calcul des composantes connexes du réseau qui constituent les clusters de molécules
+def madbyte_clusters_begin(G):
     clusters_mol = {}
     k=0
     for component in connected_components(G):
@@ -174,6 +174,11 @@ def madbyte_clusters(G, names_mols):
             if G.nodes[node]["_type"] == "standard":
                 clusters_mol[node] = k
         k = k + 1
+    return clusters_mol
+    
+def madbyte_clusters(G, names_mols):
+    # calcul des composantes connexes du réseau qui constituent les clusters de molécules
+    clusters_mol = madbyte_clusters_begin
     
     n = len(names_mols)
     mols = zeros(n)

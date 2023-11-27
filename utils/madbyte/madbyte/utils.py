@@ -14,9 +14,9 @@ import rtree
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from madbyte import dereplicator
-import madbyte.plotting as plot
-from madbyte.logging import get_logger
+from . import dereplicator
+from . import plotting as plot
+from .logging import get_logger
 
 
 logger = get_logger("MADByTE")

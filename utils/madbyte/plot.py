@@ -32,14 +32,14 @@ def modif_madbyte_network(graph , colors_clusters = None):
 
 
 # fonction pour visualiser le réseau moléculaire de madbyte en ajoutant les couleurs des clusters
-def visualize_graph_madbyte(graph, colors_clusters = None):
+def visualize_graph_madbyte(graph, title="Interactive Graph", colors_clusters = None):
 
     # Modification du réseau pour la visualisation
     graph = modif_madbyte_network(graph, colors_clusters=colors_clusters)
     
     #print(graph.nodes(data=True)["HND_Azithromycin"])
     # Créer une figure Bokeh
-    plot = figure(title="Interactive Graph", tools="pan,wheel_zoom,box_zoom,reset,save",x_range=Range1d(-1.1, 1.1), y_range=Range1d(-1.1, 1.1))
+    plot = figure(title=title, tools="pan,wheel_zoom,box_zoom,reset,save",x_range=Range1d(-1.1, 1.1), y_range=Range1d(-1.1, 1.1))
     
     # Convertir le graphe NetworkX en un graphe Bokeh
     plot_graph = from_networkx(graph, spring_layout, scale=1, center=(0, 0))
@@ -53,7 +53,7 @@ def visualize_graph_madbyte(graph, colors_clusters = None):
 
     # Ajouter un outil de survol pour afficher les informations des nœuds
     #hover = HoverTool(tooltips=[("Node", "@index"), ("Type", "@_type"), ("Members", "@members"), ("Nombre de membre", "@_num_members")])
-    hover = HoverTool(tooltips=[("Node", "@index"), ("Members", "@members")])
+    hover = HoverTool(tooltips=[("Nom", "@index"), ("Déplacements", "@members")])
     plot.add_tools(hover)
 
     # Ajouter d'autres outils d'interaction

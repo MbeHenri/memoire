@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from joblib import Parallel, delayed
 
-from madbyte import core, utils
-from madbyte.logging import get_logger
+from . import core, utils
+from .logging import get_logger
 
 __version__ = '1.0.0'
 

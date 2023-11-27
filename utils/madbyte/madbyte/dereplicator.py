@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import rtree
 
-from madbyte.logging import get_logger
+from .logging import get_logger
 
 
 logger = get_logger("MADByTE")

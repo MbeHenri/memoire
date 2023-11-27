@@ -3,8 +3,8 @@ from utils.mvgl.scratch.mvgl import mvgl
 from utils.vote import vote
 from numpy import array, ones, unique, nan
 
-from memoire.utils.gnps.own import load_data_gnps, gnps, gnps_clusters
-from memoire.utils.madbyte.own import preprocessing_madbyte, madbyte, load_network_madbyte, load_rmn_data_for_ml, madbyte_clusters
+from utils.gnps.own import load_data_gnps, gnps, gnps_clusters
+from utils.madbyte.own import preprocessing_madbyte, madbyte, load_network_madbyte, load_rmn_data_for_ml, madbyte_clusters
 from utils.preprocessingml import preprocessing_for_mc
 from utils.utils import attach_names_on_labels
 

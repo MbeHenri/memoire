@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 
-import madbyte.utils as utils
-from madbyte.filter import Filter, SOLVENT_DICT
-from madbyte.logging import get_logger
-from madbyte.parsers import acd_sim_parser, mestrenova_parser, topspin_parser,csv_parser,jeol_parser
+import utils
+from .filter import Filter, SOLVENT_DICT
+from .logging import get_logger
+from .parsers import acd_sim_parser, mestrenova_parser, topspin_parser,csv_parser,jeol_parser
 
 logger = get_logger("MADByTE")
 

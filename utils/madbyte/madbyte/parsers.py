@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 
-from madbyte.logging import get_logger
+from .logging import get_logger
 
 # from lxml import etree
 
