@@ -1,4 +1,4 @@
-import random
+from random import choice
 from matplotlib.colors import to_rgb
 
 # calcul de luminosité d'une couleur
@@ -12,7 +12,7 @@ def generate_random_colors(n, exclude_colors=[], minb=0.3, maxb=0.7):
     i = 0
     colors = []
     while i < n:
-        color = "#" + "".join([random.choice("0123456789ABCDEF") for j in range(6)])
+        color = "#" + "".join([choice("0123456789ABCDEF") for j in range(6)])
         if color not in exclude_colors:
             b = brightness(color)
             if b > minb and b < maxb :
