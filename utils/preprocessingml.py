@@ -1,5 +1,6 @@
 from numpy import zeros, reshape, max
 from pandas import merge, DataFrame
+from scipy.io import savemat
 
 # pretraitement des données RMN de molecules
 def preprocessing_rmn_data(dataset, min_hppm=2, max_hppm=10,min_cppm=20,max_cppm=150,len_win_hppm=1,len_win_cppm=20,):
@@ -60,21 +61,20 @@ def preprocessing_ms_data(dataset, min_mz=10,max_mz=1000,min_intensity=0.01,len_
 
 # on join les spectres en fonction de leur nom
 # on fait correspondre les spectres de rmn et les spectres 
-def joining_data(data_ms, data_rmn):
-    
+def joining_data(data_ms, data_rmn, output_dir):
     data =  merge(data_ms, data_rmn, on="names", how="inner")
     dataset_ms, dataset_rmn = DataFrame({"peaks": data["peaks"]}), DataFrame({"hsqc_toscy": data["hsqc_toscy"]})
     return dataset_ms, dataset_rmn, data["names"]
 
 # pretraitement des spectres ms et rmn pour les algorithmes de machin-learning 
 # inspiré de MSpectrAI
-def preprocessing_for_mc(data_ms, data_rmn):
+def preprocessing_for_mc(data_ms, data_rmn, output_dir):
     
-    dataset_ms, dataset_rmn, names = joining_data(data_ms, data_rmn)
-    
+    dataset_ms, dataset_rmn, names = joining_data(data_ms, data_rmn, output_dir)
     spectres_ms = preprocessing_ms_data(dataset_ms)
     spectres_rmn = preprocessing_ms_data(dataset_rmn)
     
     dataset = {"X" : [spectres_ms.T, spectres_rmn.T], "names" : names }
-
+    savemat(f"{output_dir}/ms_rmn.mat", dataset)
+    
     return dataset

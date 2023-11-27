@@ -9,7 +9,7 @@ def ms_preprocessing():
     
 #
 def gnps_clusters(G, names_mols):
-    pass
+    return None
 
 #
 def load_data_gnps():

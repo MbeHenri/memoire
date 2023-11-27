@@ -6,44 +6,50 @@ from numpy import array, ones, unique, nan
 from utils.gnps.gnps import load_data_gnps, gnps, gnps_clusters
 from utils.madbyte.madbyte import preprocessing_madbyte, madbyte, load_network_madbyte, load_rmn_data_for_ml, madbyte_clusters
 from utils.preprocessingml import preprocessing_for_mc
+from utils.utils import attach_names_on_labels
 
 import random
 
-def bagging(k, pathdirRMN ="rmn", pathdirMS="ms", pathdirTemp="temp", typeweak="mcles"):
+def bagging(k, pathdirRMN ="rmn", pathdirMS="ms", output_dir="temp", typeweak="mcles"):
     
     # chargement des données MS de molécules (branche 1)
     data_gnps = load_data_gnps()
     
     # chargement des données RMN de molécules (branche 2)
-    temp_dir_rmn = f"{pathdirTemp}/madbyte"
+    output_dir_rmn = f"{output_dir}/madbyte"
     # prétraitement et calcul des systèmes de spin de madbyte
-    preprocessing_madbyte(pathdirRMN, temp_dir_rmn)
+    preprocessing_madbyte(pathdirRMN, output_dir_rmn)
     # chargment proprement dit (branche 2.1)
-    data_madbyte = load_rmn_data_for_ml(pathdirRMN, temp_dir_rmn)
+    data_madbyte = load_rmn_data_for_ml(pathdirRMN, output_dir_rmn)
     
     # construction du reseau de gnps (branche 1)
     network_gnps = gnps(data_gnps)
     # construction du reseau de madbyte (branche 2.2)
-    madbyte(temp_dir_rmn)
-    network_madbyte = load_network_madbyte(temp_dir_rmn)
+    madbyte(output_dir_rmn)
+    network_madbyte = load_network_madbyte(output_dir_rmn)
     
     # pretraitement des données MS et RMN de molecules (branche 2.1 + branche 1)
-    dataforml = preprocessing_for_mc(data_gnps, data_madbyte)
+    dataforml = preprocessing_for_mc(data_gnps, data_madbyte, output_dir)
     
     # construction des etiquetes issues de madbyte et gnps
     labels_gnps = gnps_clusters(network_gnps, dataforml["names"])
     labels_madbyte = madbyte_clusters(network_madbyte, dataforml["names"])
+    
     params_gnps = None
-    params_madbyte = None
     if labels_gnps != None:
         params_gnps = {"labels": labels_gnps}
+        
+    params_madbyte = None
     if labels_madbyte != None:
         params_madbyte = {"labels": labels_madbyte}
         
     # calcul des etiquetes de clusters
     labels = bagging_prime(dataforml["X"], k, typeweak=typeweak, params_gnps=params_gnps, params_madbyte=params_madbyte)
     
-    return network_gnps, network_madbyte, labels
+    # attache des noms de molécules aux étiquetes de clusters
+    labels_with_names = attach_names_on_labels(labels["names"], labels)
+    
+    return network_gnps, network_madbyte, labels_with_names
 
 # tirage aléatoire "n" fois avec remise dans un ensemble de "n" observations pour un ensemble d'observation à regrouper
 def tirage(n):
@@ -51,7 +57,7 @@ def tirage(n):
     tirage = random.choices(elements, k=n)
     return unique(tirage).tolist()
 
-# echantillonage des observatiions
+# echantillonage des observations
 def echantillonage(X):
     N = X[0].shape[1]
     V = len(X)
