@@ -1,4 +1,4 @@
-from bokeh.io import show, output_notebook
+from bokeh.io import show, output_notebook, export_png
 from bokeh.models import (BoxZoomTool, Circle, HoverTool,
                           MultiLine, Range1d, ResetTool,)
 from bokeh.plotting import figure, from_networkx
@@ -32,7 +32,7 @@ def modif_madbyte_network(graph , colors_clusters = None):
 
 
 # fonction pour visualiser le réseau moléculaire de madbyte en ajoutant les couleurs des clusters
-def visualize_graph_madbyte(graph, title="Interactive Graph", colors_clusters = None):
+def visualize_graph_madbyte(graph, title="Interactive Graph", colors_clusters = None, path_export_png=None):
 
     # Modification du réseau pour la visualisation
     graph = modif_madbyte_network(graph, colors_clusters=colors_clusters)
@@ -62,6 +62,9 @@ def visualize_graph_madbyte(graph, title="Interactive Graph", colors_clusters = 
     # Afficher la figure dans le notebook ou dans une fenêtre séparée
     output_notebook()
     show(plot)
+    
+    if path_export_png != None :
+        export_png(plot,path_export_png)
     
 
 def calc_color(v, colors_clusters, mol):

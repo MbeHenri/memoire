@@ -8,6 +8,9 @@ from utils.madbyte.own import preprocessing_madbyte, madbyte, load_network_madby
 from utils.preprocessingml import preprocessing_for_mc
 from utils.utils import attach_names_on_labels
 
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
 import random
 
 def bagging(k, pathdirRMN ="rmn", pathdirMS="ms", output_dir="temp", typeweak="mcles"):
@@ -83,28 +86,32 @@ def modif_labels_echantillon(ids, labels, len_obs):
     return array(labs)
 
 
+def work_weak(X, k, id=0, typeweak="mcles"):
+    # echantillonage des observations
+    N = X[0].shape[1]
+    X_ = X
+    if id > 0:
+        X_, ids_obs = echantillonage(X)
+        
+    # exécution du modèle de base
+    if typeweak == "mcles":
+        labels = mcles(X_, k)["labels"]
+    if typeweak == "mvgl":
+        labels = mvgl(X_, k)["labels"]
+        
+    # reconstruction et ajout des labels de clusters fournis par du modele de base
+    if id > 0:
+        labels = modif_labels_echantillon(ids_obs, labels, N)
+        
+    return labels
+
 def bagging_prime(X, k, nbreweak=10, typeweak="mcles", weightweak=1, params_gnps=None, params_madbyte=None):
 
     N = X[0].shape[1]
-
-    labels_weaks = []
-    for id in range(nbreweak):
-        # echantillonage des observations
-        X_ = X
-        if id > 0:
-            X_, ids_obs = echantillonage(X)
         
-        # exécution du modèle de base
-        if typeweak == "mcles":
-            labels = mcles(X_, k)["labels"]
-        if typeweak == "mvgl":
-            labels = mvgl(X_, k)["labels"]
-        
-        # reconstruction et ajout des labels de clusters fournis par du modele de base
-        if id > 0:
-            labels = modif_labels_echantillon(ids_obs, labels, N)
-        
-        labels_weaks.append(labels)
+    labels_weaks = Parallel(n_jobs=-1)(
+        delayed(work_weak)(X,k,id=id,typeweak=typeweak) for id in range(nbreweak)
+    )
     
     # ajout des labels d'étiquetes de madbyte et gnps
     if params_gnps != None:
