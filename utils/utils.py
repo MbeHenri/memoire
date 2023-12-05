@@ -1,5 +1,6 @@
 from random import choice
 from matplotlib.colors import to_rgb
+from numpy import zeros, nan
 
 # calcul de luminosité d'une couleur
 def brightness(str_color):
@@ -34,4 +35,16 @@ def attach_names_on_labels(names, labels):
         names[i] : labels[i]
         for i in range(n)
     }
+    return mols
+    
+def finalise_clusters(G, clusters_mol, names_mols):
+
+    n = len(names_mols)
+    mols = zeros(n)
+    for i in range(n):
+        try:
+            mols[i] = clusters_mol[names_mols[i]]
+        except :
+            mols[i] = nan
+            
     return mols

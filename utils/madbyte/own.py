@@ -3,6 +3,7 @@ from networkx import read_graphml, connected_components
 from pandas import DataFrame
 from json import loads
 from numpy import zeros, nan
+from networkx import bfs_tree
 
 from .madbyte import spin_system_construction, generate_network, correlation_matrix_generation
 
@@ -74,26 +75,22 @@ def load_rmn_data_for_ml(input_dir, output_dir):
     return df_2drmn
     
 # > construction des clusters à partir du réseau moléculaire de madbyte
-def madbyte_clusters_begin(G):
-    clusters_mol = {}
-    k=0
-    for component in connected_components(G):
-        for node in component:
-            if G.nodes[node]["_type"] == "standard":
-                clusters_mol[node] = k
-        k = k + 1
-    return clusters_mol
-    
-def madbyte_clusters(G, names_mols):
-    # calcul des composantes connexes du réseau qui constituent les clusters de molécules
-    clusters_mol = madbyte_clusters_begin
-    
-    n = len(names_mols)
-    mols = zeros(n)
-    for i in range(n):
-        try:
-            mols[i] = clusters_mol[names_mols[i]]
-        except :
-            mols[i] = nan
-            
-    return mols
+
+## calculer les feuilles d'un arbre
+def get_leaves(tree, root_node):
+    succs = list(tree.successors(root_node))
+    if len(succs) == 0 :
+        return [root_node]
+    leaves = []
+    for succ in succs:
+        leaves.extend(get_leaves(tree, succ))
+    return leaves
+
+## calculer le voisinage d'un noeud depuis
+def voisinage_mol_madbyte(x, G, Mols=None, hybrid=False):
+    tree = bfs_tree(G, x, depth_limit = 2 if hybrid else 3) 
+    return [ node for node in get_leaves(tree, x) if G.nodes[node]["_type"] == "standard" ]
+
+
+def get_mol_madbyte(G):
+    return [ k for k, v in G.nodes(data=True) if v["_type"]=="standard"]
