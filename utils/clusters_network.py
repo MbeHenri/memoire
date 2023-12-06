@@ -72,24 +72,34 @@ def madbyte_clusters_components(G):
     # On voit les clusters comme des composentes connexes
     clusters_mol = {}
     k = 0
+    noises = []
     for component in connected_components(G):
-        for node in component:
-            if G.nodes[node]["_type"] == "standard":
+        groupe = [node for node in component if G.nodes[node]["_type"] == "standard"]
+        if len(groupe) > 1:
+            for node in groupe:
                 clusters_mol[node] = k
-        k = k + 1
-    return clusters_mol
+            k = k + 1
+        else:
+            noises.extend(component)
+    return clusters_mol, noises
 
 
 def madbyte_clusters_base(G, MinPts=2, hybrid=False):
-
-    def voisinage(x, G, Mols=None):
-        return voisinage_mol_madbyte(x, G, Mols=Mols, hybrid=hybrid)
-
-    #[G_sim.subgraph(c).copy() for c in nx.connected_components(G_sim)]
-    clusters, noises, _ = moldbscan(
-        G, Minpts=MinPts, voisinage=voisinage, getnode=get_mol_madbyte)
-    # clusters, noises = madbyte_clusters_components(G), []
+    
+    if MinPts > 1:
+        def voisinage(x, G, Mols=None):
+            return voisinage_mol_madbyte(x, G, Mols=Mols, hybrid=hybrid)
+    
+        #[G_sim.subgraph(c).copy() for c in nx.connected_components(G_sim)]
+        clusters, noises, _ = moldbscan(
+            G, Minpts=MinPts, voisinage=voisinage, getnode=get_mol_madbyte)
+        # clusters, noises = madbyte_clusters_components(G), []
+    else:
+        clusters, noises = madbyte_clusters_components(G)
+        
     return clusters, noises
+    
+    
 
 
 def madbyte_clusters(G, names_mols, hybrid=False, MinPts=2):
