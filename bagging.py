@@ -96,7 +96,7 @@ def work_weak(X, k, id=0, typeweak="mcles"):
         
     # exécution du modèle de base
     if typeweak == "mcles":
-        labels = mcles(X_, k)["labels"]
+        labels = mcles(X_, k, nInitForKmeans=1)["labels"]
     if typeweak == "mvgl":
         labels = mvgl(X_, k)["labels"]
         
