@@ -1,59 +1,105 @@
+from numpy import array, ones, unique, nan, log, exp
+import random
+
 from utils.mcles.scratch.mcles import mcles
 from utils.mvgl.scratch.mvgl import mvgl
-
+from utils.utils import attach_names_on_labels
 from utils.vote import vote
-from numpy import array, ones, zeros
+from .process_madbyte_gnps import process_madbyte_gnps
 
 
-def oracle(labels_oracles, mol1, mol2):
-    pass
+def bootsing(k, pathdirRMN ="rmn", pathdirMS="ms", output_dir="temp", typeweak="mcles"):
+    
+    # execution des processus liés à madbyte et à GNPS
+    network_gnps, networks_madbyte, dataforml, params_gnps, params_madbyte = process_madbyte_gnps(pathdirRMN=pathdirRMN, pathdirMS=pathdirMS, output_dir= output_dir)
+    
+    # concaténation des étiquetes de madbyte et de GNPS
+    labels_oracle = []
+    if params_gnps != None:
+        labels_oracle.append(params_gnps["labels"])
 
+    if params_madbyte != None:
+        labels_oracle.append(params_madbyte["labels"])
+    
+    # calcul des etiquetes de clusters
+    labels = bootsing_prime(dataforml["X"], k, labels_oracle, typeweak=typeweak)
+    
+    # attache des noms de molécules aux étiquetes de clusters
+    labels_with_names = attach_names_on_labels(dataforml["names"], labels)
+    
+    return network_gnps, networks_madbyte, labels_with_names
 
-def bootsing(k, nbreweaks=10, typeweaks="mcles"):
-    pass
+def tirage(n, weights):
+    elements = list(range(n))
+    tirage = random.choices(elements, weights=weights, k=n)
+    return unique(tirage).tolist()
 
-#
-def selection(X, weights):
-    pass
-
-#
-def calcul_erreur(labels, labels_oracles):
-    pass
-
-#
-def calcul_importance(erreur):
-    pass
-
-#
-def modif_labels_echantillon(ids, labels, len_obs):
-    pass
-
-#
-def modif_weights(weights, erreur):
-    pass
-
-def bootsing_prime(X, k, nbreweak=10, typeweak="mcles", labels_oracles=None):
+# echantillonage des observations
+def echantillonage(X, weights):
     N = X[0].shape[1]
-    if typeweak is "mcles":
+    V = len(X)
 
-        labels_weaks = []
-        weights = ones(N)/N
-        importances = zeros(nbreweak)
+    ids = tirage(N, weights)
 
-        for it in range(nbreweak):
-            # echantillonage
-            X_, ids_obs = selection(X, weights)
+    X_ = []
+    for v in range(V):
+        X_.append(array([X[v][:, id] for id in ids]).T)
 
-            labels = mcles(X_, k)["labels"]
+    return X_, ids
 
+# reconstruction des etiquetes des observations echantillonées
+def modif_labels_echantillon(ids, labels, len_obs):
+
+    labs = [nan for _ in range(len_obs)]
+    for id in range(len(labels)):
+        labs[ids[id]] = labels[id]
+
+    return array(labs)
+
+
+def verdict_bien_classe(labels, labels_oracle):
+    pass
+
+
+def bootsing_prime(X, k, labels_oracle, nbreweak=10, typeweak="mcles"):
+    N = X[0].shape[1]
+    
+    labels_weaks = []
+    importances = []
+    weights = ones(N)/N
+    for _ in range(nbreweak):
+
+        # échantillonage des observations
+        N = X[0].shape[1]
+        X_ = X
+        if id > 0:
+            X_, ids_obs = echantillonage(X, weights)
+
+        # exécution du modèle de base
+        if typeweak == "mcles":
+            labels = mcles(X_, k, nInitForKmeans=1)["labels"]
+        if typeweak == "mvgl":
+            labels = mvgl(X_, k)["labels"]
+
+        # reconstruction et ajout des labels de clusters fournis par du modele de base
+        if id > 0:
             labels = modif_labels_echantillon(ids_obs, labels, N)
 
-            error = calcul_erreur(labels, labels_oracles)
-            
-            weights = modif_weights(weights, error)
-            
-            importances[it] = calcul_importance(error)
+        # étiquetage des observations en bien classé (0) ou en mal classé (1)
+        verdicts = verdict_bien_classe(labels, labels_oracle)
 
-            labels_weaks.append(labels)
+        # calcul de l'érreur du clustering
+        error = sum(weights * verdicts)
 
-        return vote(array(labels), importances, k)
+        # calcul de l'importance du modèle
+        importance = 0.5 * log((1-error)/error)
+
+        # mise à jour des poids
+        verdicts[verdicts == 0] = -1
+        weights = weights * exp(importance*verdicts)
+        weights = weights / sum(weights)
+
+        importances.append(importance)
+        labels_weaks.append(labels)
+
+    return vote(array(labels_weaks), k, importances)
