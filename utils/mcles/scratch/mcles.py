@@ -1,4 +1,4 @@
-from numpy import sqrt, concatenate, zeros, dot, sum, trace, sqrt
+from numpy import sqrt, concatenate, zeros, dot, sum, trace
 from numpy.random import rand
 from sklearn.cluster import KMeans
 from .updateW import UpdateW
