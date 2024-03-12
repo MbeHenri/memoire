@@ -11,7 +11,7 @@ import numpy as np
 import pymetis
 import kahypar
 from scipy import sparse
-from sklearn.metrics import pairwise_distances, normalized_mutual_info_score
+from sklearn.metrics import normalized_mutual_info_score #, pairwise_distances
 from sklearn.utils.extmath import safe_sparse_dot
 
 
@@ -27,7 +27,7 @@ def create_hypergraph(base_clusters):
     H: incidence matrix of base clusters' hypergraph
     """
     H = []
-    len_bcs = base_clusters.shape[1]
+    # len_bcs = base_clusters.shape[1]
 
     for bc in base_clusters:
         bc = np.nan_to_num(bc, nan=float('inf'))
@@ -65,7 +65,7 @@ def to_pymetis_format(adj_mat):
         idx_row, idx_col = row.nonzero()
         val = row[idx_row, idx_col]
         adjncy += list(idx_col)
-        eweights += list(val.toarray()[0])
+        eweights += val.tolist()[0]
         xadj.append(len(adjncy))
 
     return xadj, adjncy, eweights
