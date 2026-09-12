@@ -1,0 +1,53 @@
+
+% commande la page de couverture
+\newcommand{\pagecouverture}[2]{
+    \thispagestyle{empty}
+    
+    \begin{tikzpicture}[remember picture,overlay,inner sep=0,outer sep=0]
+            \draw[blue!70!black,line width=4pt] ([xshift=-1.5cm,yshift=-2cm]current page.north east) coordinate (A)--([xshift=1.5cm,yshift=-2cm]current page.north west) coordinate(B)--([xshift=1.5cm,yshift=2cm]current page.south west) coordinate (C)--([xshift=-1.5cm,yshift=2cm]current page.south east) coordinate(D)--cycle;
+    
+            \draw ([yshift=0.5cm,xshift=-0.5cm]A)-- ([yshift=0.5cm,xshift=0.5cm]B)--
+            ([yshift=-0.5cm,xshift=0.5cm]B) --([yshift=-0.5cm,xshift=-0.5cm]B)--([yshift=0.5cm,xshift=-0.5cm]C)--([yshift=0.5cm,xshift=0.5cm]C)--([yshift=-0.5cm,xshift=0.5cm]C)-- ([yshift=-0.5cm,xshift=-0.5cm]D)--([yshift=0.5cm,xshift=-0.5cm]D)--([yshift=0.5cm,xshift=0.5cm]D)--([yshift=-0.5cm,xshift=0.5cm]A)--([yshift=-0.5cm,xshift=-0.5cm]A)--([yshift=0.5cm,xshift=-0.5cm]A);
+    
+    
+            \draw ([yshift=-0.3cm,xshift=0.3cm]A)-- ([yshift=-0.3cm,xshift=-0.3cm]B)--
+            ([yshift=0.3cm,xshift=-0.3cm]B) --([yshift=0.3cm,xshift=0.3cm]B)--([yshift=-0.3cm,xshift=0.3cm]C)--([yshift=-0.3cm,xshift=-0.3cm]C)--([yshift=0.3cm,xshift=-0.3cm]C)-- ([yshift=0.3cm,xshift=0.3cm]D)--([yshift=-0.3cm,xshift=0.3cm]D)--([yshift=-0.3cm,xshift=-0.3cm]D)--([yshift=0.3cm,xshift=-0.3cm]A)--([yshift=0.3cm,xshift=0.3cm]A)--([yshift=-0.3cm,xshift=0.3cm]A);
+    
+    \end{tikzpicture}
+    
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Images/capture.png}\\
+        \vspace{1.5cm}
+        \setlength{\fboxsep}{6mm}% définir l'écart
+        \setlength{\fboxrule}{1.2mm} % définir l'épaisseur du trait
+    
+        \fbox{ % utilisé pour voir les bords de la minipage
+            \begin{minipage}[c]{14cm}
+            
+            \begin{center}
+            \large\textit{\textbf{Rapport de Lecture\\}}
+                \Large\textbf{Thème: Composition de Techniques HRMS et RMN par Apprentissage Ensembliste pour l’Identification des Réseaux Moléculaires}
+            \end{center}
+            \end{minipage}
+        }
+        \vspace{0.5cm}
+        \begin{center}
+            %**************** titre
+            \textbf{\Large{#1}}
+            
+            %*************** sous-Titre
+            #2
+        \end{center}
+        \begin{tabular}{ll}
+           \textbf{\textit{Rédigé par : }} & \emph{MBE MBE MINDJANA LOIC HENRI } \textbf{18T2603}
+        \end{tabular}
+        \vspace{1.5cm}
+        \begin{center}
+            \texttt{Encardreurs : Pr MELATAGIA Paulin, Pr. WAFFO TEGUO Pierre}
+        \end{center}
+        \vspace{1.5cm}
+        \begin{center}
+            \textbf{\textit\underline{{Ann\'ee Acad\'emique 2022 / 2023 }}}
+        \end{center}
+    \end{center}
+}

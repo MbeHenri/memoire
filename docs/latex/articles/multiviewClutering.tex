@@ -1,0 +1,237 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Clustering Multi-Vues : Multi-View Clustering}
+    {Steffen Bickel et Tobias Scheffer}
+    \tableofcontents
+    \vspace{20cm}
+    
+    \section{Introduction}
+    Les algorithmes réputés tels que KMEANS, CAH, ou encore l'algorithme EM permettent d'explorer des données à une représentation (vue), mais ces dernières années la plupart des données qu'on obtient sur des objets diverses viennent de différentes sources avec différentes représentations. Dans le but d'explorer des données à deux représentations différentes et indépendantes, les chercheurs teffen Bickel et Tobias Scheffer ont proposé des versions de ces algorithmes populaires qui seront sujet de ce document. Nous présenterons d'abord l'article, ensuite les algorithmes données par les auteurs et nous parlerons de leur performance décrite.
+    
+    
+    \section{Description de l'article}
+         L'article \textbf{Multi-view Clustering} \cite{bickel2004multi} est le résultat de recherche des auteurs \textbf{teffen Bickel} et \textbf{Tobias Scheffer}, visant à trouver des versions d'algorithmes multivues de co-formation pour les algorithmes KMEANS, EM(Expectation Maximum) et CAH(Classification Ascendante Hierachique) en utilisant des données textuelles possédant deux vues indépendantes. Dans le but d'évaluer les modèles et d'effectuer des analyses sur ces dernières, les auteurs ont choisi les métriques tels que le logarithme de vraisemblance (pour l’algorithme EM spécialement) et l'entropie moyenne.
+    
+        \begin{itemize}
+            \item \textbf{Titre}: Multi-view Clustering
+            \item \textbf{Auteurs}: \textbf{teffen Bickel} et \textbf{Tobias Scheffer}
+            \item \textbf{Année de publication}: 2004
+            \item \textbf{Journal}: ICDM
+        \end{itemize}
+
+    \section{Algorithme de clustering multi-vues EM}
+        L'algorithme EM \cite{dempster1977maximum} est l'algorithme le plus utilisé pour maximiser le logarithme de vraisemblance compte tenu une modélisation spécifique des clusters d'observations à une vue. Il utilise deux étapes spécifiques :
+        \begin{enumerate}
+            \item \textbf{E} (Expectation) : qui permet de calculer les probabilités d'appartenance aux clusters appelés de variables cachées des paramètres du modèles
+            \item \textbf{M} (Maximisation) : qui permet de maximiser le logarithme de vraisemblance en calculant les paramètres permettant de le faire compte tenu des probabilités d'appartenance aux clusters
+        \end{enumerate}
+    
+        Dans le but de traiter des données à deux vues, les auteurs ont présenté une version générale de cet algorithme \ref{alg:em-mg} qui malheureusement n'assure pas la convergence. Dans cet version on a des paramètres semblables de modèles pour chaque vue $\Theta^{(1)}$ et $\Theta^{(2)}$, qui seront calculés au tour à tour des vues pour maximiser le logarithme de vraisemblance, en utilisant les probabilités d'appartenance des classes de vues complémentaire.
+
+        \begin{algorithm}[H]
+             \caption{Pseudo code de l'algorithme multi-vues EM \cite{bickel2004multi}}
+             \label{alg:em-mg}
+             \begin{algorithmic}[1]
+              \REQUIRE Données d'entrée $X$ = $\{ (x_{1}^{(1)}, x_{1}^{(1)}), (x_{2}^{(1)}, x_{2}^{(1)}), ..., (x_{n}^{(1)}, x_{n}^{(1)}) \}$
+              \STATE Initialiser $\Theta_{0}^{(2)}$, $t=0$
+              \STATE \textbf{(E)} pour la vue 2 : calcul des variables cachées liées aux paramètres $\Theta_{0}^{(2)}$
+              \WHILE{critère d'arrèt n'est pas satisfait}
+
+                \FOR{$v$ allant de 1 à 2}
+                    \STATE $t = t+1$
+                    \STATE \textbf{(M)} pour la vue $v$ : Calcul des paramètres $\Theta_{t}^{(v)}$ en fonction des variables cachées de la vue complémentaire $\Bar{v}$
+                    \STATE \textbf{(E)} pour la vue $v$ : Calcul des variables cachées des paramètres $\Theta_{t}^{(v)}$
+                \ENDFOR
+                 
+              \ENDWHILE
+              \STATE return $\hat{\Theta} = \Theta_{t-1}^{(1)} \cup \Theta_{t}^{(2)}$
+             \end{algorithmic}
+        \end{algorithm}
+
+        Dans le but de manipuler des données textuelles, les auteurs ont proposé une modélisation des clusters liées au fait qu' obtenir un texte de $n$ mots revient à tirer $n$ mots avec remise dans le dictionnaire. on définit sur l'équation \ref{equa:em-ms1} la probabilité d'obtenir selon la vue $v$ et le composant de mélange $k$ une observation $x_{i}^{(v)}$ avec $\text{occur}_{ij}^{(v)}$ étant le nombre d'occurence du mot $j$ dans le texte $x_{i}^{(v)}$. Sur cette équation on peut voir $p_{k}^{(v)} (\text{word}_j)$ pour chacun des mots $j$ correspond à des paramètres.
+
+        \begin{equation}
+            p( x_{i}^{(v)}| \Theta_{k}^{(v)}) = \prod_{j} {[p_{k}^{(v)} (\text{word}_j)]}^{\text{occur}_{ij}^{(v)}}
+            \label{equa:em-ms1}
+        \end{equation}
+
+        On définit également sur l'équation \ref{equa:em-ms2}, la probabilité pour une observation d'appartenir à une classe compte tenu des paramètres globales $\Theta^{(v)}$ sur une vue $v$. On a donc $\alpha_k^{(v)}$ comme étant des paramètres.
+        
+        \begin{equation}
+            \begin{aligned}
+                p( C = C_{k}| x_{i}^{(v)} , \Theta^{(v)}) = p( k| x_{i}^{(v)} , \Theta^{(v)}) = \frac{ P^{(v)}(C = C_{k}) \times P( x_{i}^{(v)}, \Theta^{(v)}| C = C_{k} ) }{ \sum_{k'} P^{(v)}(C = C_{k'}) \time P( x_{i}^{(v)}, \Theta^{(v)}| C = C_{k'}) }
+                \\
+                = \frac{ \alpha_k^{(v)} \times P( x_{i}^{(v)}| \Theta_{k}^{(v)} ) }{ \sum_{k'} \alpha_{k'}^{(v)} \time P( x_{i}^{(v)}| \Theta_{k'}^{(v)} ) }
+            \end{aligned}
+            \label{equa:em-ms2}
+        \end{equation}
+        De ces dernières définition, on a le modèle de mélange d'une vue $v$ donné par les paramètres $\Theta^{(v)}$ étant les probabilités $p_{k}^{(v)} (\text{word}_j)$ et les poids $\alpha_k^{(v)}$ qui sont les probabilités à priori. Les paramètres maximisant le logarithme de la vraisemblance sur une vue $v$ (donné à l'équation \ref{equa:em-ms3}) sont données par les équations \ref{equa:em-ms4} et \ref{equa:em-ms5} après résolution du problème d’optimisation.
+        
+        \begin{equation}
+            \log(P(X^{(v)})) = \sum_{i=1}^{n} P(x_{i}^{(v)})) =  \sum_{x \in X} log(\sum_{k=1}^{K} \alpha_k \times p( x_{i}^{(v)}| \Theta_{k}^{(v)}))
+            \label{equa:em-ms3} 
+        \end{equation}
+
+        \begin{equation}
+            p_{k}^{(v)} (\text{word}_j) = \frac{ 1 + \sum_i p( k| x_{i}^{(v)} , \Theta^{(v)}) \times \text{occur}_{ij}^{(v)} }{ \sum_{j'} [ 1 + \sum_i p( k| x_{i}^{(v)} , \Theta^{(v)}) \times \text{occur}_{ij'}^{(v)} ] }
+            \label{equa:em-ms4} 
+        \end{equation}
+
+        \begin{equation}
+            \alpha_k^{(v)} = \frac{1}{n} \sum_i p( k| x_{i}^{(v)} , \Theta^{(v)})
+            \label{equa:em-ms5} 
+        \end{equation}
+
+        On exécutera sur la base de ces équations l'algorithme générale \ref{alg:em-mg} suivant les paramètres avec les conditions d'arrêt de la boucle étant:
+        \begin{itemize}
+            \item nombre maximum d'itérations
+            \item convergence des logarithmes de vraisemblance
+        \end{itemize}
+
+    \section{Algorithme de clustering multivues KMEANS Sphérique}
+        L'algorithme de KMEANS est l'un des algorithmes de clustering par partitionnement les plus utilisés pour des données à une vue. Afin de traiter les données principalement éparses, une version de cet algorithme prenant en compte comme mesure de similarité le cosinus de similarité a vu le jour. Cet algorithme a pour nom l'algorithme de KMEANS sphérique de référence \cite{dhillon2001concept}.
+        
+        Pour que l'algorithme de KMEANS sphérique puisse traiter des données à plusieurs vues, les auteurs l'ont écrit en l'algorithme [], en prenant comme template l'algorithme générale de co-formation des algorithmes (EM) \ref{alg:em-mg} en sachant que l'algorithme (EM) et KMEANS sont semblable. Ici les paramètres $\theta^{v}$ pour chaque vue $v$ sont donnés par les centres $C_{k}^{(v)}$ (qui correspondent aux paramètres de modèle) et aux partitions $\pi_{k}^{(v)}$ (correspondant aux affectations des observations et donc aux variables cachées) représentant chaque cluster $k$. Pour simplifier les opérations, on calcule les vecteurs unitaires de chaque observation et ce sont ces vecteurs unitaires qui seront considérés. On a $\pi_{k}^{(v)}$ qui est donnée par l'équation \ref{equa:kmeans-m1} et $C_{k}^{(v)}$ par l'équation \ref{equa:kmeans-m2} sachant que le cosinus de similarité $\cos(x,y)$ entre deux observations unitaires $x$ et $y$ est égale à $<x , y>$.
+    
+        \begin{equation}
+            \pi_{k}^{(v)} = \{ x_{i}^{(v)} | k = \text{argmax}_{k'}(\cos(x_{i}^{(v)} ,C_{k'}^{(v)})) =  \text{argmax}_{k'}(< x_{i}^{(v)} ,C_{k'}^{(v)}>) \}
+            \label{equa:kmeans-m1} 
+        \end{equation}
+
+        \begin{equation}
+            C_{k}^{(v)} = \frac{ \sum_{ x^{(v)} \in \pi_{k}^{(v)} } x^{(v)} }{ || \sum_{ x^{(v)} \in \pi_{k}^{(v)} } x^{(v)} || }
+            \label{equa:kmeans-m2} 
+        \end{equation}
+
+         Comme pour la version à vue unique de KMEANS sphérique, on vas chercher à maximiser pour chaque vue $v$ la fonction $f^{(v)}$ donné par l'équation \ref{equa:kmeans-m3}, qui permet d'évaluer à quel point les observations de chaque cluster forment des groupes compactes (sont rapprochés les unes des autres); qui est très proche de l'inertie intra-classe utilisant les mesures de similarités.
+         
+        \begin{equation}
+             f^{(v)} = \sum_k \sum_{ x^{(v)} \in \pi_{k}^{(v)} } \cos(x^{(v)}, C_{k}^{(v)}) = \sum_k \sum_{ x^{(v)} \in \pi_{k}^{(v)} } <x^{(v)}, C_{k}^{(v)}>
+            \label{equa:kmeans-m3} 
+        \end{equation}
+
+        On aura ainsi les conditions d'arrèt étant : 
+        \begin{itemize}
+            \item nombre maximum d'itérations
+            \item convergence des métriques $f^{(v)}$
+        \end{itemize}
+        
+        Afin d'obtenir les partitions finales sachant que pour chaque vue $v$ les clusters ne seront pas forcément les mêmes, on calcule les vecteurs moyens $m_{k}$ par l'équation \ref{equa:kmeans-m4}, qui par la suite seront utilisés pour calculer les partitions finaux $\pi_k$ par l'équation \ref{equa:kmeans-m5}. Il faut noter que $m_k$ est le vecteur moyen des observations du cluster $k$ qui seront retrouvées dans toutes les vues $v$.
+
+        \begin{equation}
+            \begin{aligned}
+                m_{k} = \frac{ \sum_{ x^{(v)} \in \lambda_k } x^{(v)} }{ || \sum_{ x^{(v)} \in \lambda_k } x^{(v)} || } \\
+                \text{avec } \lambda_k = \pi_{k}^{(1)} \cap \pi_{k}^{(2)}  
+            \end{aligned}
+            \label{equa:kmeans-m4} 
+        \end{equation}
+
+        \begin{equation}
+            \begin{aligned}
+                \pi_k = \{ 
+                    x_i | 
+                    k = \text{argmin}_{k'} 
+                        \text{\Large(} 
+                            \arccos(\cos(x_{i}^{(1)} ,m_{k'}^{(1)})) + \arccos(\cos(x_{i}^{(2)} ,m_{k'}^{(2)})) 
+                        \text{\Large)} 
+                    \\
+                    =  \text{argmin}_{k'}\text{\Large(} \arccos(<x_{i}^{(1)} ,m_{k'}^{(1)}>) + \arccos(<x_{i}^{(2)} ,m_{k'}^{(2)}>) \text{\Large)}
+                \}  
+            \end{aligned}
+            \label{equa:kmeans-m5} 
+        \end{equation}
+
+        \begin{algorithm}[H]
+             \caption{Pseudo code de l'algorithme multi-vues KMEANS sphérique}
+             \label{alg:em-mg}
+             \begin{algorithmic}[1]
+              \REQUIRE Données d'entrée $X$ = $\{ (x_{1}^{(1)}, x_{1}^{(1)}), (x_{2}^{(1)}, x_{2}^{(1)}), ..., (x_{n}^{(1)}, x_{n}^{(1)}) \}$
+              \STATE Initialiser les centres $C_{k}^{(2)}$
+              \STATE \textbf{(E)} pour la vue 2 : calcul des partitions $\pi_{k}^{(2)}$
+              \WHILE{critère d'arrèt n'est pas satisfait}
+                \FOR{$v$ allant de 1 à 2}
+                    \STATE \textbf{(M)} pour la vue $v$ : $\pi_{k}^{(v)}$ = $\pi_{k}^{(\Bar{v})}$, Calcul des centres $C_{k}^{(v)}$
+                    \STATE \textbf{(E)} pour la vue $v$ : Calcul des partitions $\pi_{k}^{(v)}$
+                \ENDFOR
+              \ENDWHILE
+              \STATE calcul des centres $m_k$ et des partitions $\pi_k$
+             \end{algorithmic}
+        \end{algorithm}
+
+
+    \section{Algorithme de clustering multi-vues CAH}
+        Comme les deux derniers algorithmes, l'algorithme CAH est un algorithme de clustering hiérarchique très utilisé et ne prend pas en compte plusieurs vues de données. Pour faire en sorte que l'algorithme puisse utiliser des données à deux vues, les auteurs l'ont modifié en l'algorithme \ref{alg:cah-ms1} en prenant comme principe celui des algorithmes de co-formation donné dans l'article de référence \cite{yang2018multi}. Il faut noter que cette version, comme celle de l'algorithme à une vue, nécessite qu’on définisse des distances entre les clusters pour chacune des vues.
+
+        \begin{algorithm}[H]
+            \caption{Pseudo code de l'algorithme multi-vues CAH \cite{bickel2004multi}}
+            \label{alg:cah-ms1}
+            \begin{algorithmic}[1]
+            \REQUIRE Données d'entrée $X$ = $\{ (x_{1}^{(1)}, x_{1}^{(1)}), (x_{2}^{(1)}, x_{2}^{(1)}), ..., (x_{n}^{(1)}, x_{n}^{(1)}) \}$, les mésures de distances entre clusters pour chacune des vues $d^1(C_i,C_j)$ et $d^2(C_i,C_j)$
+            \STATE Initialiser les clusters $C_i = x_i$
+            \FOR{$t$ allant de 1 à n}
+                \FOR{$v$ allant de 1 à 2}
+                    \STATE rechercher le couple de cluster $(C_i, C_j)= \text{argmin}_{C_i,C_j} d^v(C_i, C_j)$ pour $i,j = 1...(n-t+1)$
+                    \STATE Fusionner les clusters $C_i$ et $C_j$ sur le dendogram commun aux deux vues
+                \ENDFOR
+            \ENDFOR
+            \STATE retourner le dendogram commun aux deux vues
+            \end{algorithmic}
+        \end{algorithm}
+
+    \section{Resultats}
+        Les auteurs ont évalué leurs algorithmes présentés sur des datasets multi-vues WebKB modifiées (pour respecter les conditions d'indépendance) contenant des pages web représentées par leurs contenus et les textes d'ancrages des liens entrants. Ces pages web sont celles de cours, de département, de faculté, de projet, d'étudiant et d'autres personnels.
+    
+    	La métrique utilisée pour évaluer tous les algorithmes est l'entropie moyenne donnée par l'équation \ref{equa:entopie_1} dans le cas où on a model de mélange. On a $p_{kk'}$ est la proportion du modèle de mélange $k'$ dans le cluster $k$ et $n_k$ le nombre d'observations du cluster $k$. Dans les cas contraire, nous pensons qu'une conversion des modèles en question devront être fait en modèle de mélange.
+ 
+        \begin{equation}
+            \begin{aligned}
+                E = \sum_k  \frac{ n_k }{ n } \times ( - \sum_{k'} p_{kk'}\log(p_{kk'}))
+            \end{aligned}
+            \label{equa:entopie_1} 
+        \end{equation}
+ 
+        Pour l'algorithme EM plus spécifiquement le logarithme de vraisemblance a été également utilisé. On a:
+        \begin{itemize}
+            \item la figure \ref{fig:em-m1} qui montre que l'algorithme à 2 vues de EM minimise plus rapidement et bien mieux les erreurs d'affections des observations ainsi que la quantité de désordre présent dans les clusters
+        	\item la figure \ref{fig:em-m2} qui montre que la version à 2 vues maximise moins rapidement et moins mieux le logarithme de vraisemblance que celle à une vue, par contre si on poursuit sur le clustering obtenu sur une des vues avec l'algorithme EM à une vue, on atteint une meilleure maximisation du logarithme.
+        \end{itemize}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{Images/evaluateMultiviewEM.png}
+            \caption{Entropie pour la version à 1 vue et 2 vues de l'algorithme EM (à gauche) et KMEANS sphérique (à droite) \cite{bickel2004multi} }
+            \label{fig:em-m1}
+        \end{figure}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{Images/evaluateMultiviewEM2.png}
+            \caption{Logarithme de vraisemblance pour la version à 1 vue et 2 vues de l'algorithme EM \cite{bickel2004multi}}
+            \label{fig:em-m2}
+        \end{figure}
+        La figure d'évaluation \ref{fig:em-m1} qui montre que l'algorithme à 2 vues de KMEANS sphérique, minimise plus rapidement le désordre présent dans les clusters comparé à l'algorithme à une vue. Malheureusement pour l'algorithme à deux de CAH sur la figure \ref{fig:cah-m1}, on perçoit que quelque soit le nombre de clusters $K$ choisi, on obtient moins de désordre en utilisant la version de l'algorithme à une vue qu'en utilisant celui à deux. Cela peut être causé par le moyen de fusion des clusters, mais théoriquement en supposant que les données suivent une distribution de von Mises-Fisher, les auteurs ont prouvé que la version de l'algorithme de co-formation CAH à deux vues sera probablement moins performante que l'algorithme CAH à une vue.
+    
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{Images/evaluateMultiviewEM2.png}
+            \caption{Entropies pour la version à 1 vue et 2 vues de l'algorithme CAH \cite{bickel2004multi}}
+            \label{fig:cah-m1}
+        \end{figure}
+    
+        Par contre, la démonstration de la convergence des algorithmes EM et KMEANS s'appuie sur les figures d'évaluation données précédemment issues d'expérimentation. De façon théorique les auteurs sur l'article de référence \cite{dasgupta2001pac} de Dagusta et al., qui permet de dire que la probabilité d'erreur du désaccord entre deux vues est une borne supérieure sur ceux des ces vues distinctement.
+    
+    
+    \section{Conclusion}
+        En somme, il était question pour nous de présenter les algorithmes de clustering multi-vues de co-formation de EM, KMEANS sphérique et CAH, ainsi que leur performance face à leur homologue s'appuyant sur des données à vue unique.
+    	Une condition a été donnée pour s'assurer des performances données, celle de l'indépendance entre les vues qui indique que ces dernières ne dépendent pas l'une de l'autre. Ceci implique qu'il n'existerait aucun effet de causalité entre les vues. Existe t' il des algorithmes qui permettent de tenir compte des données à plus de 2 vues indépendantes et à plusieurs vues liées (non indépendantes); et comment peut-on mésurer l'indépendance entre plusieurs vues?
+   
+\bibliographystyle{plain}
+    \bibliography{reference_GNPS_MADByTE}
+\end{document}

@@ -1,0 +1,150 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Multi-View Clustering in Latent Embedding Space }
+    {Man-Sheng Chen and al.}
+	\tableofcontents
+	\vspace{20cm}
+
+	\section{Introduction}
+    Les algorithmes de clustering multi-vues d'apprentissage de représentation utilisant les données des vues d'origines, s'appuient grandement sur la qualité des données pour définir de bon regroupement.
+    Malheureusement il est très difficile d'obtenir des données de bonne qualité pour chacune de vues dans la vie courante.
+    Par exemple, pour que les spectres MS et RMN soient utilisables, il faudrait qu'ils suivent des étapes de prétraitement dans le but d'améliorer leur qualité (en retirant des pics indésirables, en tenant compte des erreurs possibles).
+    De ce fait, la qualité des spectres est une limite à ces algorithmes de clustering.
+    Dans le but de résoudre ce problème, les chercheurs Man Sheng et al. ont proposé l'approche MCLES (Multiview Clustering Latent Embedding Space) dans l'article de référence \cite{mcles}, qui permet d'apprendre une représentation unifiée dans un espace intermédiaire appelé latent, et qui sera sujet de ce document.
+ 
+    \section{Algorithme MCLES}
+
+    L'idée est de construire une représentation unifiée (une nouvelle représentation combinée des vues) dans un espace latent, afin de calculer une matrice de similarité de cette représentation qui sera utilisée pour effectuer les regroupements.
+    Cela dit, en entrée de l'algorithme, on a les données des vues et le nombre de clusters pour avoir en sortie la représentation unifiée, les indicateurs de clusters des observations et la matrice de similarité à utiliser.
+Comme la figure \ref{fig:mcles1} le montre , on calcule d'abord la représentation unifiée, puis la matrice de similarité et enfin les indicateurs de clusters d'observations continuellement jusqu'à ce qu'on obtient le meilleure clustering possible ou après un certains nombre d'itérations.
+    \begin{figure}
+   	 \centering
+   	 \includegraphics[width = \linewidth]{Images/mcles1.png}
+   	 \caption{Workflow de l'algorithme MCLES}
+   	 \label{fig:mcles1}
+    \end{figure}
+
+    On peut affirmer que calculer la représentation unifiée d'une observation revient, à calculer également entre guillemets les poids de chaque vue, de tel sorte que lorsqu'on les applique à la représentation, on obtient l'observation dans ces vues.
+    Ainsi obtenir la représentation unifiée de toutes les observations revient également à trouver les poids des vues (qui caractérisent l'espace intermédiaire) qui permettent d'obtenir les données d'origine après application sur elle.
+
+    Plus formellement pour l'observation $i$, on a $x_i^{(v)}$ étant son vecteur caractéristique dans la vue $v$ comme suit, avec $h_i$ étant sa représentation unifiée et $W^{(v)}$ étant la matrice des poids de la vue $v$.
+    \begin{equation*}
+   	 x_i^{(v)} = W^{(v)} h_i
+    \end{equation*}
+    En supposant que les observations sont vues comme des colonnes des matrices de données des vues, on obtient l'expression suivante
+    \begin{equation*}
+   	 X = WH \text{ où } X = \begin{pmatrix} X^{(1)}\\X^{(2)}\\\vdots\\X^{(V)} \end{pmatrix}, W = \begin{pmatrix} W^{(1)}\\W^{(2)}\\\vdots\\W^{(V)}\end{pmatrix}
+    \end{equation*}
+    Ainsi pour obtenir $W$ et $H$, on minimise l'erreur de calcul de $H$ et $W$ en calculant la différence entre les données des vues et le produit de $H$ et $W$.
+    Ce qui nous conduit au problème suivant à résoudre:
+    \begin{equation}
+   	 \begin{aligned}
+   		 \min_{W,H} {|| X - WH ||}_F^2 \text{  s.t. ${|| W_{:,j} ||}_2^2$} \\
+   		 X = \begin{pmatrix} X^{(1)}\\X^{(2)}\\\vdots\\X^{(V)} \end{pmatrix}, W = \begin{pmatrix} W^{(1)}\\W^{(2)}\\\vdots\\W^{(V)}\end{pmatrix}
+   	 \end{aligned}
+   	 \label{equa:mcles3}
+    \end{equation}
+
+    Ayant la représentation unifiée, on calcule la matrice de similarité entre les observations.
+    Pour le faire, on s'appuie sur le fait qu'une observation est sensiblement égale à une combinaison linéaire des autres où les coefficients sont les similarités entre l'observation en question et les autres observations.
+    Car la similarité entre une observation $i$ et une observation $j$ peut être également décrit comme le pourcentage d'influence qu'à l'observation $i$ sur l'observation $j$, et vis versa.
+    Donc en associant $S$ à la matrice de similarité des observations, on a :
+	\begin{equation*}
+   	 h_j \simeq \sum_i h_iS_{ij}
+    \end{equation*}
+    Ainsi pour obtenir $S$, on minimise l'erreur entre la représentation unifiée et les données qu'on obtient après application des poids de similarité sur cette même représentation.
+    Ce qui conduit au problème suivant:
+    \begin{equation*}
+   	 \begin{aligned}
+   		 \min_{S} {|| H - HS ||}_F^2 \text{  s.t. $S_{:,j}\textbf{1}=1$, $0\leq S \leq1$}
+   	 \end{aligned}
+    \end{equation*}
+    Afin de pénaliser le fait que les similarités entre observations soient trop grandes, on minimise la somme positive de ses composantes.
+    Ce qui nous permet d'obtenir le problème suivant à résoudre:
+    \begin{equation}
+   	 \begin{aligned}
+   		 \min_{S} {|| H - HS ||}_F^2 + \beta {|| S ||}_F^2 \\
+   		 \text{  s.t. $S_{:,j}\textbf{1}=1$, $0\leq S \leq1$}
+   	 \end{aligned}
+   	 \label{equa:mcles5}
+    \end{equation}
+
+    Considérons que chaque observation $j$ possède un vecteur indicateur de clusters $p_j$ à $k$ composantes où chaque composante correspond à un cluster.
+	On peut donc évaluer l'erreur d'allouer à des clusters deux observations connectées, comme étant la différence entre leurs vecteurs indicateurs, associée à leur similarité.
+	On cherche donc les indicateurs qui permettront de minimiser la somme des ces erreurs pour tous les couples d'observations.
+
+	Plus formellement, on a l'erreur totale de clustering $f(S, P)$ comme suit, avec
+    $P$ la matrice indicateur,
+    $L_S$ étant le laplacien du graphe issu de $S$ égale à $D - S$ et
+    $D$ étant la matrice de degré du graphe issu de S
+	\begin{equation*}
+   	 f(S, P) = \sum_{i,j} {\|p_i-p_j\|}^2s_{ij} = Tr(P^TL_SP)
+    \end{equation*}
+	D'où le problème suivant à résoudre:
+    \begin{equation}
+   	 \begin{aligned}
+   		 \min_{P} Tr(P^TL_SP) \\ \text{  s.t. $P^TP =I$}
+   	 \end{aligned}
+   	 \label{equa:mcles6}
+    \end{equation}
+
+    Dans le but de calculer simultanément tous ces paramètres, on réunit les trois problèmes \ref{equa:mcles3}, \ref{equa:mcles5} et \ref{equa:mcles6} en le problème suivant:
+    \begin{equation}
+   	 \begin{split}
+   		 & \min_{W,H,S,P}  \underbrace{ {|| X - WH ||}_F^2 }_{\text{apprentissage de la représentation unifiée}}  + \underbrace{ \alpha{|| H - HS ||}_F^2 + \beta {|| S ||}_F^2 }_{\text{apprentissage de la matrice globale}} + \underbrace{ \gamma Tr(P^TL_SP) }_{\text{apprentissage de l'indicateur de clusters}}
+        	\\
+   		 &\quad \text{  s.t. ${|| W_{:,j} ||}_2^2$ , }
+   		 \text{$S_{:,j}\textbf{1}=1$, $0\leq S \leq1$ ,}
+   		 \text{$P^TP =I$}
+   	 \end{split}
+   	 \label{equa:mcles7}
+    \end{equation}
+
+    Pour résoudre ce problème, l'algorithme MCLES d'optimisation suivant.
+   	 \begin{algorithm}[H]
+   		 \caption{Algorithme d'optimisation MCLES \cite{mcles}}
+   		 \label{alg:mcles1}
+   		 \begin{algorithmic}[1]
+   		 \REQUIRE Données d'entrée $X$, les constantes de régularisations $\alpha$, $\beta$, $\gamma$, la dimension de l'espace latent $d$, $k$ le nombre de cluster
+   		 \STATE Initialiser H, P, $W = 0$, $S = 0$
+   		 \REPEAT
+       		 \STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable W ($\alpha$, $\beta$, $\gamma$ ne sont pas considérées)
+       		 \STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable H ($\beta$, $\gamma$ ne sont pas considérées)
+       		 \STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable S ($\gamma$ n'est pas considéré)
+       		 \STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable P (clustering spectral)
+   		 \UNTIL{ convergence }
+   		 \STATE retourner W,H,S,P
+   		 \end{algorithmic}
+   	 \end{algorithm}
+
+    Pour résoudre l'équation \ref{equa:mcles7} en considérant comme unique variable $W$, on utilise l'algorithme ADMM (Alternating Direction Method of Multipliers) construit par Cu et al. en 2014.
+    Pour $H$ et $S$ par la suite, on utilise les conditions de KKT, qui conduit pour $H$ à une équation de sylvester($AX+BX=C$) et pour $S$ à des problèmes d'optimisation quadratique.
+    Pour $P$ on utilise également les conditions de KKT.
+
+    \section{Observations}
+    On a un ensemble d'observations qui sont les suivantes:
+    \begin{itemize}
+   	 \item On n'introduit pas l'importance des vues dans le calcul des clusters
+   	 \item Dans le calcul de la matrice de similarité, on introduit une observation dans sa propre estimation en utilisant les autres autres observations
+   	 \item On considère les similarités comme étant des pourcentages, ce qui n'est pas forcément vrai
+   	 \item La condition de symétrie de la matrice de similarité obtenu n'est pas vérifiée, on suppose juste qu'il sera vérifiée
+    \end{itemize}
+
+	\section{Conclusion}
+    En somme, il était question pour nous de présenter l'algorithme MCLES.
+    Plus particulièrement, il utilise la factorisation pour obtenir la représentation unifiée dans l'espace latent et pour ainsi par la suite exécuter l'algorithme de clustering spectral sur la matrice de similarité entre les observations.
+    Nous remarquons qu'on n'introduit pas l'importance des vues dans le calcul des clusters et que la définition d'une mesure de similarité n'est pas complètement vérifiée.
+    Est ce que tenir compte de ces éléments améliorerait la performance du modèle? Si oui comment le faire ?
+   
+\bibliographystyle{plain}
+	\bibliography{reference_GNPS_MADByTE}
+\end{document}

@@ -1,0 +1,16 @@
+\chapter{Conclusion Générale}
+
+
+Dans cette étude, nous avons considéré la complémentarité et le potentiel consensus d'informations qui existent entre les spectres MS et RMN des molécules. Cela dans le but d'identifier les molécules qui ne le sont pas et donc d'identifier les réseaux moléculaires les contenant.
+Les méthodes existantes telles que GNPS et MADByTE utilisant respectivement les spectres MS et RMN, ne prennent pas en compte cette complémentarité et ce consensus d'informations obtenus des molécules par spectrométrie.
+Pour pouvoir les exploiter pour la construction des réseaux issus respectivement de GNPS et de MADByTE, nous avons combiner les clusters dans ces réseaux avec ceux obtenus par le biais des algorithmes de clustering multi-vues MCLES ou MVGL, par apprentissages par ensemble Bagging et Boosting, avec comme algorithme de vote majoritaire MCLA.
+Pour obtenir automatiquement les clusters contenus dans les réseaux, nous avons utilisé l'algorithme DBSCAN en définissant le voisinage d'une molécule dans un réseau moléculaire.
+
+Nos expérimentations sur la dataset MSRC-V1, ont permis d'observer qu'avec MCLES comme weak-learner, nous avons les meilleures performances en termes de regroupement. On parle de 80.1\% d'exactitude, 74.3\% d'information mutuelle normalisée et de 81.1\% de pureté pour le Bagging. Cela montre que les clusters construits par apprentissage ensembliste tiennent mieux compte des structures complexes des données. Ce qui nous permet d’affirmer que l’approche basée sur les apprentissages Bagging et Boosting améliorent la qualité des réseaux moléculaires qui accéléra leurs processus d'identification.
+
+Néanmoins, nous avons été confrontés à des difficultés qui nous ont permis de cerner des limites à l'approche. Premièrement toutes les approches proposées ont besoin de données complètes des spectres MS et RMN qui se trouvent très difficile à avoir en pratique, ensuite le temps d'exécution est relativement grand et enfin les approches proposées accordent la même importance aux données de chaque représentation malgré le fait que les spectres MS contiennent beaucoup plus de bruits que les spectres RMN.
+De là, nous comptons pour la suite, en premier lieu expérimenter les approches proposées complètement sur des spectres de molécules issus de notre propre collecte des données, puis d'accélérer les approches par parallélisation, et d'enfin proposer une méthode prenant en compte l'importance que doit avoir les spectres MS et RMN chacune dans la construction d'une représentation unifiée pour améliorer le clustering.
+
+\justify
+
+

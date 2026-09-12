@@ -1,0 +1,53 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{article}
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    Il existe plusieurs types d'équations matricielles importantes en mathématiques et en sciences de l'ingénieur. Voici une liste de certains types d'équations matricielles courants où $A$, $B$, $Q$, $C$ sont des matrices données et $X$ est une matrice inconnue
+
+    \begin{itemize}
+        \item Équation matricielle linéaire : 
+            \begin{equation}
+                AX = B
+            \end{equation}
+        \item Équation matricielle de Lyapunov :
+            \begin{equation}
+                AX + XA^T + Q = 0
+            \end{equation}
+        \item Équation matricielle de Riccati :
+            \begin{equation}
+                XA + AX - XBR^{-1}B^TX + Q = 0
+            \end{equation}
+        \item Équation matricielle d'algèbre linéaire :
+            \begin{equation}
+                AX = XB
+            \end{equation}
+        \item Équation matricielle de Sylvester :
+            \begin{equation}
+                AX + XB = C
+            \end{equation}
+    
+        \item Équation matricielle de Stein : $(A + XBX)^2 - (A^2 + XB^2X) = 0$
+            \begin{equation}
+                AX + XB = C
+            \end{equation}
+        \item Équation matricielle de DARE (Discrete-time Algebraic Riccati Equation) :
+            \begin{equation}
+                X = A^TXA - (A^TXB)(R + B^TXB)^{-1}(B^TXA) + Q
+            \end{equation}
+        \item Équation matricielle de CARE (Continuous-time Algebraic Riccati Equation) : 
+            \begin{equation}
+                AX + XA^T - XBR^{-1}B^TX + Q = 0
+            \end{equation}
+        \item Équation matricielle de Fokker-Planck :
+            \begin{equation}
+                \frac{\partial X}{\partial t} = D \frac{\partial^2 X}{\partial x^2} - \frac{\partial}{\partial x}(AX) + BX
+            \end{equation}
+        \item Équation matricielle de diffusion : $\nabla^2$ étant l'opérateur de Laplace-Beltrami
+            \begin{equation}
+                \frac{\partial X}{\partial t} = D \nabla^2 X
+            \end{equation}
+        
+    \end{itemize}
+
+\end{document}

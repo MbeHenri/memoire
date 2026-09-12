@@ -1,0 +1,144 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Cluster Ensembles – A Knowledge Reuse Framework for
+	Combining Multiple Partitions}
+    {Alexander Strehl and Joydeep Ghosh}
+
+    \tableofcontents
+    \vspace{20cm}
+    
+    \section{Introduction}
+    Dans le but de combiner GNPS et MADByTE, la combinaison des clusters contenus dans leur réseau est pertinente.
+	Cela revient à trouver des clusters finaux, qui partagent avec les clusters issues de plusieurs regroupeurs (weak-learners) un maximum d'observations, et donc d'informations en commun.
+	C'est dans le but de résoudre ce problème que les chercheurs Alexander Strehl et Joydeep Ghosh, l’ont formalisé et ont proposé 3 algorithmes pour le résoudre dans l'article de référence \cite{strehl2002cluster}, qui est sujet de ce document.
+	Dans les lignes qui suivent, nous donnerons la formalisation qu'ils ont proposée et présenterons ces 3 algorithmes.
+
+	\section{Formalisation}
+	Soient $\mathcal{X} = \{ x_1, x_2, \dots, x_N \}$ un ensemble de $N$ observations.
+	Un regroupement de ces observations en $K$ clusters peut etre representer, comme $K$ ensembles disjoints d’observations $\{ C_k | k = 1, \dots, K \}$, ou comme un vecteur d'étiquettes $\lambda$ où la $i$-ème composante correspond au numéro du cluster contenant l'observation $x_i$.
+	Soient $\Lambda = \{ \lambda_1, \lambda_2, \dots , \lambda_M \}$ l'ensemble des vecteurs d'étiquettes issues de $M$ algorithmes de clustering donnés.
+
+	Trouver les clusters finaux qui combinent le mieux les clusters de base, revient à trouver le vecteur d'étiquettes $\hat{\lambda}$ représentatif du regroupement finale, qui partage le plus d'informations possible
+	avec ceux des regroupements de base.
+	Cela revient à maximiser l'information mutuelle entre le regroupement final $\hat{\lambda}$ et ceux de base $\Lambda$. D'où le problème d'optimisation suivant
+    
+	\begin{equation}
+    	\max_{\hat{\lambda}} \text{ANMI}(\hat{\lambda}, \Lambda) = \frac{1}{M} \sum_{m=1}^{M} \text{NMI}(\hat{\lambda}, \lambda^{(m)})
+   	 \label{equa:enss1}
+    \end{equation}
+	avec $\text{NMI}(\hat{\lambda}, \lambda^{(m)})$ étant l'information mutuelle normalisée entre les distributions $\hat{\lambda}$ et $\lambda^{(m)}$ dont la formule est la suivante:
+
+	\begin{equation}
+    	\text{NMI}(\lambda^{(a)}, \lambda^{(b)}) = \frac{ \sum_{k=1}^{K^{(a)}} \sum_{k'=1}^{K^{(b)}} n_{k,k'} \log\left( \frac{N \times n_{k,k'}}{ n_k^{(a)} n_{k'}^{(b)} } \right) }{  \sqrt{ \left( \sum_{k=1}^{K^{(a)}} n_k^{(a)}\log( \frac{n_k^{(a)}}{N} )  \right) \left( \sum_{k'=1}^{K^{(b)}} n_{k'}^{(b)} \log( \frac{n_{k'}^{(b)}}{N} )  \right)  } }
+   	 \label{equa:enss2}
+    \end{equation}
+	avec $n_k^{(a)}$ étant le nombre d'observations contenues dans le cluster $k$ du regroupement $\lambda^{(a)}$, $n_{k'}^{(b)}$ étant le nombre d'observations contenues dans le cluster $k'$ du regroupement $\lambda^{(a)}$, $n_{k,k'}$ étant le nombre d'observations étant dans les clusters $k$ et $k'$, $K^{(a)}$ étant le nombre de clusters du regroupement $\lambda^{(a)}$, $K^{(b)}$ étant le nombre de clusters du regroupement $\lambda^{(b)}$.
+    
+	Pour résoudre ce problème, les auteurs ont proposé les algorithmes suivant:
+
+	\begin{itemize}
+    	\item L'algorithme Cluster-based Similarity Partitioning Algorithm (CSPA)
+    	\item L'algorithme HyperGraph Partitioning Algorithm (HGPA)
+    	\item L'algorithme Meta-CLustering Algorithm (MCLA)
+	\end{itemize}
+
+	\section{Algorithmes de combinaison}
+
+	\subsection{Algorithme CSPA}
+	L'idée ici est de construire un graphe, où les sommets sont les observations et où les arêtes portent les similarités entre observations, afin d'y appliquer une coupure pour obtenir les clusters voulus.
+	La similarité entre deux observations étant le pourcentage de regroupements qui les assignent dans le même cluster.
+	Pour réaliser la coupure du graphe de similarité, l'algorithme utilise le package METIS \cite{karypis1998software}.
+    
+	D’où les étapes suivantes:
+	\begin{enumerate}
+    	\item \textbf{Transformation des regroupements de base}
+   	 
+    	Cette étape consiste à transformer les clusters de regroupements de base, en vecteur binaire d'appartenance des observations comme sur la figure \ref{fig:cb}.
+    	Les matrices binaires obtenues pour chaque regroupement, seront concaténées pour former une matrice binaire $H$
+
+    	\item \textbf{Construction du graphe de similarité}
+    
+    	Pour construire le graphe de similarité, il faut impérativement calculer la matrice de similarité $S$ entre observations.
+    	Pour le faire, on s'appuie sur la définition de cette similarité donnée plus haut. De plus nous pouvons remarquer qu'on a $S = \frac{1}{M}HH^{\small{T}}$
+   	 
+    	\item \textbf{Construction des clusters}
+    
+    	Pour construire les clusters, on utilise une coupure du graphe de similarité, grâce au package METIS, ce qui permet d'avoir un graphe avec $K$ composantes connexes qui représentent les clusters.
+	\end{enumerate}
+    
+	%De ces étapes, on peut voir que la complexité en temps de l'algorithme est de $O(N^2KM)$, $O(NM)$ pour la transformation, $O(N^2M)$ pour le calcul du graphe de similarité,
+
+\begin{figure}
+    	\centering
+    	\includegraphics[width = \linewidth]{Images/cluster_binaire.png}
+    	\caption{Transformation des clusters de base en vecteurs binaires \cite{strehl2002cluster}}
+    	\label{fig:cb}
+	\end{figure}
+
+	\subsection{Algorithme HGPA}
+
+	L'idée est de construire un hyper-graphe (graphe dont les arêtes relient plusieurs sommets), où les sommets sont les observations et les arêtes sont les clusters de base, et d'ensuite y réaliser une coupure pour obtenir les clusters finaux.
+	Cette coupure est réalisée en utilisant le package HMETIS \cite{karypis1998hypergraph}.
+
+	D'où les étapes suivante :
+	\begin{enumerate}
+    	\item \textbf{Construction de l'hyper-graphe}
+    	\item \textbf{Construction des clusters finaux} par coupure de l'hyper-graphe en utilisant le package HMETIS
+	\end{enumerate}
+
+
+	\subsection{Algorithme MCLA}
+	L'idée de l'algorithme est de regrouper les clusters de base en $K$ groupes de clusters appelés méta-clusters, puis d'assigner chaque observation au méta-cluster qui possède le plus de clusters lui contenant.
+	Pour le faire l'algorithme MCLA suit les étapes suivantes:
+    
+	\begin{enumerate}
+    	\item \textbf{Transformation des clusters de base}
+     
+    	Cette étape consiste à transformer les clusters de base, en vecteur binaire d'appartenance d’observations comme sur la figure \ref{fig:cb}
+
+    	\item \textbf{Construction du graphe de similarité de ces clusters}
+    
+    	Cette étape consiste à construire un graphe, où les sommets sont les clusters de base, et où les arêtes portent les similarités entre ces clusters.
+    	La similarité entre deux clusters étant mesurée par l'indice de Jaccard de ces derniers, qui est décrit comme suit:
+   	 
+    	Soit $a$ et $b$ étant des clusters de base, l'indice de Jaccard $S(a, b)$ entre eux, est calculé en utilisant la formule suivante:
+    	\begin{equation}
+   		 S(a, b) = \frac{|a \cap b|}{|a \cup b|} = \frac{h_a^{\small{T}} h_b}{\|h_a\|_2^2 + \|h_b\|_2^2 - h_a^{\small{T}} h_b}
+   	 \end{equation}
+    	avec $h_a$ et $h_b$ étant les vecteurs binaires des clusters $a$ et $b$ respectivement
+
+    	\item \textbf{Regroupement des clusters en $K$ méta-clusters}
+   	 
+    	Cette étape consiste à regrouper les clusters en $K$ groupes de clusters similaires appelés méta-clusters.
+    	Pour le faire, on réalise une coupure du graphe de similarité obtenu à l'étape précédente, en utilisant le package METIS.
+    	On pourra ainsi en pratique pour chaque groupe obtenu, sommer les vecteurs binaires de ses clusters, pour compter pour chaque observation, le nombre de clusters du groupe qui lui contiennent.
+
+    	\item \textbf{Construction des clusters finaux}
+   	 
+    	Cette étape consiste à attribuer chaque observation au méta-cluster qui lui contient le plus.
+
+	\end{enumerate}
+
+
+	\section{Conclusion}
+	En somme, nous avons présenté les algorithmes permettant de résoudre le problème de combinaison de clusters issues d'algorithmes de clustering de base.
+	Il était question pour nous de parler particulièrement MCLA, vu qu'il est basé sur les clusters.
+	Nous remarquons que MCLA et CSPA sont les plus performants d'après les expérimentations réalisées dans l'article.
+
+
+\bibliographystyle{plain}
+    \bibliography{reference_GNPS_MADByTE}
+\end{document}
+
+
+
+

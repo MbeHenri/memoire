@@ -1,0 +1,104 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Sherlock—A Free and Open-Source System for the Computer-Assisted Structure
+Elucidation of Organic Compounds from NMR Data}
+    {}
+    \tableofcontents
+    \vspace{20cm}
+    
+    \section{Contexte et description de l'article}
+    Dans le but de résoudre le problème d'élucidation de structures, en s'appuyant sur les données de spectrométrie par résonance magnétique nucléaire 1D et 2D, les auteurs
+    ont proposé le système expert "sherlock" dans l'article \cite{wenk2023sherlock} qui sera sujet de ce document. Il permet de produire des potentiels structures candidates d'une molécule dont on a les spectres 1D-2D RMN et la formule moléculaire, en s'appuyant sur deux bases de données de déplacements chimiques et de fragments.
+    Comme information sur l'article nous avons:
+    \begin{itemize}
+   	 \item \textbf{titre} :{Sherlock—A Free and Open-Source System for the Computer-Assisted Structure Elucidation of Organic Compounds from NMR Data}
+   	 \item \textbf{auteurs}: {Wenk, Michael and Nuzillard, Jean-Marc and Steinbeck, Christoph}
+   	 \item \textbf{journal}:{Molecules}
+   	 \item \textbf{année}: {2023}
+    \end{itemize}
+
+    \section{Processus d'élucidation}
+    Comme il est décrit précédemment, sherlock suit un processus d'élucidation (présent sur la figure \ref{fig:sherlock_1}) qui prend en entrée une formule moléculaire, des spectres 1D-RMN (C13 et H1) et spectres 2D-RMN (HSQC, HMQC, COSY),
+    pour produire des structures moléculaires candidates. Cela avec possibilité de spécifier des fragments de la molécule d'entrée pour réaliser un filtre des structures obtenues.
+    
+    \begin{figure}
+   	 \centering
+   	 \includegraphics[width = \linewidth]{Images/sherlock_process.png}
+   	 \caption{Processus d'élucidation de sherlock}
+   	 \label{fig:sherlock_1}
+    \end{figure}
+
+    Ce processus suis un ensemble d'étapes qui sont les suivantes:
+    
+   	 \subsection{Combinaison des entrées}
+   	 Cette phase étant faite par l'utilisateur, consiste à combiner les différentes entrées progressivement pour obtenir un tableau sommaire
+   	 de déplacements chimiques et de croisement entre les différents atomes.
+   	 \begin{itemize}
+   		 \item on spécifie la formule moléculaire de la molécule : ce qui nous permet d'avoir le nombre d'atomes par type
+   		 \item on ajoute les spectres 1D-RMN : pour spécifier les déplacements chimiques de chacuns des atomes
+   		 \item on ajoute les spectres 2D-RMN : pour détecter les liaisons entre molécules (molécules lourds-protons, protons-protons)
+   	 \end{itemize}
+     
+   	 Sur le tableau obtenu, on a en ligne les atomes lourds, plus précisément les atomes de carbone décrit par leur étiquette, leur déplacement chimique, le nombre de liaisons avec les atomes d'hydrogène, et les différentes liaisons avec ces protons ('S+' et 'S-' respectivement une liaison unique à pique positif et à pic négative, 'M' pour une liaison multiple).
+   	 Si un ou plusieurs d'hydrogène sont libres alors, il serait question pour l'utilisateur de spécifier les liaisons existantes avec les autres atomes lourds.
+    
+   	 \subsection{Obtention des contraintes de génération de structures}
+   	 Afin de réduire le nombre potentiellement infini de structures, sherlock construit sur la base d'un tableau sommaire des déplacements chimiques et croisement d'atomes, un ensemble de contraintes. Ces constraintes sont la base sur laquelle sherlock PyLSD s'appuyer pour proposer des structures.
+   	 Comme contraintes calculées, nous avons pour chaque atome de carbone:
+   	 \begin{itemize}
+   		 \item le nombre d'atomes d'hydrogène auquel l'atome est lié avec son déplacement chimique (déja contenu dans le tableau sommaire)
+   		 \item son état d'hybridation qui est obtenu, en calculant pour chaque état d'hybridation la probabilité de leur obtenir (compte tenu le déplacement chimique de l'atome, sa multiplicité, la formule moléculaire de la molécule lui contenant) et en choisissant par la suite la plus probable et la plus présente dans la base des molécules connus
+   		 \item les types d'atomes voisins obtenues de la même manière que l'état d'hybridation
+   	 \end{itemize}
+  	 
+   	 On peut ainsi noter que par molécule connue (de leur formule et structure moléculaire), on enregistre pour chaque atome de carbone, son indice d'atome (par exemple on a l'indice 1 pour dire qu'on a affaire au premier atome de la structure), son déplacement chimique, le nombre de protons y attachés et son état d'hybridation.
+   	 Pour calculer les probabilités décrites ci-dessus, on effectue des correspondances entre les atomes de carbone, sur la base de leur déplacement chimique en tenant compte d'une différence maximale possible (tolérance).
+
+   	 Dans le but de filtrer les structures qui seront proposées, il est possible de donner des fragments de la molécule d'entrée ou d'en choisir les plus pertinents dans la base de fragments. Chaque fragment étant décrit par sa formule moléculaire et son vecteur binaire de présence de déplacements chimiques d'atomes de carbone.
+   	 On peut donc comprendre que la pertinence d'un fragment dépend de son taux de correspondance avec la molécule d'entrée sur la base de leurs déplacements chimiques d'atomes de carbone.
+  	 
+   	 \subsection{Génération de structures potentielles}
+   	 La génération des structures candidates est fait par un outil expert "PySLD" (py-Logic for Structure Determination) qui prend en entrée les contraintes décrites ci dessus et produit les structures qui correspondent le plus aux contraintes.
+   	 Pour réduire le nombre de candidats, sherlock les filtre en utilisant les potentiels fragments spécifiés au niveau à l'étape des contraintes.
+  	 
+   	 \subsection{Prédiction de déplacements et notation des structures candidates}
+   	 Pour pouvoir classer les structures candidates par pertinence, sherlock prédit les déplacements chimiques d'atomes de carbone pour chacun d'eux (en se basant sur le code "HOSE"), puis calcule pour chacun le taux de correspondance avec la molécule d'entrée par déplacements chimiques d'atomes de carbone.
+   	 Ce taux de correspondance constitue la notation d'une structure candidate et par ricochet sa pertinence.
+
+
+    \section{Architecture}
+    Pour pouvoir mener à bien son objectif, sherlock à une architecture basée sur le web (on a un Frontend et un Backend) comme vue sur la figure \ref{fig:sherlock_2}, qui permet efficassement de l'exploiter.
+    \begin{figure}
+   	 \centering
+   	 \includegraphics[width = \linewidth]{Images/sherlock_arch.png}
+   	 \caption{Architecture de sherlock \cite{wenk2023sherlock}}
+   	 \label{fig:sherlock_2}
+    \end{figure}
+
+    Le "Frontend" à savoir l'aspect visuelle est constitué de deux onglets principales:
+    \begin{itemize}
+   	 \item l'onglet "spectral": par laquel on construit la table sommaire en combinant les informations contenues dans les spectres
+   	 \item l'onglet "CASE": permettant de générer les structures potentielles
+    \end{itemize}
+
+    Le "Backend" à savoir l'aspect computationnel, est constitué de toutes les routines utiles de l'analyse de la table sommaire à la génération des structures candidates notées.
+    
+    \section{Conclusion}
+    En somme, il était question pour nous de faire un résumé de ce qu'est sherlock et d'en comprendre le processus de déréplication.
+    Pour aider au processus, il serait intéressant d'introduire la proposition de structure moléculaire pour les noeuds d'un réseau moléculaire unifié pour deux raisons principales
+    pour aider à l'élucidation de structure plus rapidement et faciliter la déréplication.
+    Dans cette mesure, la recherche des algorithmes utilisés par l'outil PySLD et HOSE pourrait être utile, pour mieux comprendre comment ils fonctionnent afin de mieux les exploiter.
+    Nous avons néanmoins un terme que nous n’avons pas correctement compris, celui d'état d'hybridation. qu'est ce l'hybridation et qu'est ce qu'un état d'hybridation.
+   
+\bibliographystyle{plain}
+    \bibliography{reference_GNPS_MADByTE}
+\end{document}

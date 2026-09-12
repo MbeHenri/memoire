@@ -1,0 +1,214 @@
+
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix,epsfig,endnotes}
+\usepackage{hyperref}
+\usepackage[version=4]{mhchem}
+\usepackage{caption}
+\usepackage{lastpage}
+
+\begin{document}
+
+\date{}
+
+\title{\Large \bf Composition de Techniques HRMS et RMN par Apprentissage Ensembliste pour l’Identification des Réseaux Moléculaires}
+
+\author{
+{\rm MBE MBE MINDJANA LOIC HENRI}\\
+Université de Yaounde I}
+
+
+\maketitle
+
+\thispagestyle{empty}
+
+
+\subsection*{Abstract}
+Notre société depuis des centaines années, connait les traces de la médecine sur la
+base de produits naturelles qui ont permis de guérir des maladies à l’instar le paludisme , ils
+c’est à dire ces produits naturelles sont généralement les bases utiles de la conception et
+de réalisation de médicaments qui nécessitent une analyse en laboratoire des molécules ou
+macromolécules y contenus pour rechercher les principes actifs sur des types des parasites et
+virus ciblés (plasmodium par exemple). Cette tâche ardue nécessite l’utilisation des
+méthodes physico-chimiques HRMS et RMN donc les résultats spectraux permettent d'obtenir des réseaux molécules qui nécessitent une identification, d'où la problématique d'identification de réseaux moléculaires. Des modèles numériques existent pour réaliser cette identificaton en s'appuyant sur les spectres issues de HRMS et RMN, mais afin de répondre aux problèmes respectifs de qualité et d'obtention lente de spectres issus de ces techniques, la question qui nous vient à l'esprit est commment exploiter les avantages liées à ces méthodes. Nous proposons un modèle qui permet par apprentissage par ensemble de composer les deux techniques afin d'exploiter les avantages que proposent ces dernières. Entant le premier outil de composition de ces méthodes pour l'identification de réseau moléculaire. Nous montrons ainsi que pour le cas d'une recherche de médicaments, nous avons de meilleures identifications comparer aux méthodes utilisées séparement. 
+
+\textbf{Mots clés} : Apprentissage par ensemble, Identification réseaux moléculaires, spectrométrie
+
+\section{Introduction}
+    Dans un besoin de plus en plus croisant suite à la pandémie du covid19, de vaccin, des travaux et des recherches ont été menées pour rechercher les molécules bioactives, antivirales qui permettrait de stopper l’avancer des virus correspondants SARS-Cov-2. La plus part de ce type récherche se basent sur des produits naturelles telque l'Artémésia qui permet de guerrir du paludisme. Malheureusement la commercialisation ou la distribution de tel produits ne peut se faire à grand échelle, et donc nécessite une reproduction synthétique. cette reproduction inclue des étapes physico-chimiques, telque les techniques de spectrométrie HRMS (High Resolution Mass Spectrometry) et RMN(Resonnance Magnetic Nuclear) pour permettre d'identifier des molécules déjà retrouver et analyser, et ceux d'intérèt plus important, cette étape ppellée la déréplication s'applique de nos jours en utilisant un modèles d'interprétation d'ensembles de molécules appélée réseau moléculaire qui permet après identification ou encore annotation d'obtenir des vues de l'espace chimique contenu dans les molécules. D'où la problématique d'identification ou d'annotation de réseau moléculaire s'appuyant sur des technique de spectrométrie. 
+    
+    Pour le faire des outils informatiques existent dont on a les plus populaires , GNPS(Global Natural Product Social Molecular Networking) s'appuyant sur les spectres de spectrométrie de masse dont les performances ne sont plus à démontrer, utilise un réseau moléculaire ou de similarité qui par annotation permet d'avoir une capture de l'espace chimique contenu dans un ensemble de spectres décrivant des fractions et échantillons de composés, pareillement on a MADByTE(Metabolomics and Dereplication By Two-Dimensional Experiments) qui lui s'appuit sur les spectres RMN utilse également un réseau de simmilarité obtenus par le biais de captures de caractéristiques contenus dans les spectres RMN d'échantillons.
+
+    Compte tenue de l'inconvénient majeure de HRMS à dépendre d'une ionisation de qualité malgré le temps d'aquisition de spectres élévées et du temps d'aquisition lente des spectres RMN magré la précision des spectres, cous proposons une approche par apprentissage par ensemble pour combiner les avantages de ces techniques de spectrométrie pour mieux annoter ou identifier des réseaux moléculaires. Cette approche est originale dans le sens où les utilisations en commun de ces techniques se fait toujours idépendament de l'un à l'autre, et donc nous pensons qu'il révolutionnera ainsi le domaine d'identification de réseau moléculaire.
+
+    En utilisant les données obtenus en laboratoire d'extrait d'Artémésia, nous démontrons par le biais d'évaluation d'experts spécifiquement de la qualité des réseaux identifiés et de la découverte d'une nouvelle molécule bioactive contenu dans la molécule, comparée à l'utilisation de MADByTE et GNPS communément et séparement.
+
+    Dans les lignes qui suivent, nous parlerons d'abord des terminologies, des outils GNPS et MADByTE qui constitue l'état de l'art, de la méthodologie, de l'évaluation et enfin de la conclusion. Dans le but de rendre la lecture éfficiente nous proposons aux experts d'entamer directement la lecture avec la section liée à la méthodologie.
+
+\section{Terminologies}
+
+    Un réseau moléculaire est une réprésentation d'un ensemble de composés, de protéines ou de molécules sous forme de graphe où les noeuds et les arètes dépendent de l'objectif de la réprésentataion. Pour un ensemble de composés ayant subit une spectrométrie, les noeuds peuvent ètre les spectres et les aretes, des liaisons d'affinité entre les spectres.
+        
+    La bio-activité correspond à une caractéristique ou encore une propriété que possède une molécule, un composé ou encore un matériau, d’engendrer des successions spécifiques de réactions conduisant à un effet spécifique sur un organisme vivant, des tissus, des cellules, des molécules, Généralement on attribue cette propriété à une capacité d’apport bénéfique(ou néfaste dans le but de les éviter) pour la santé, du fait d'un grand nombre d'études menées sur de tel composé durant ces dernières années, on peut ainsi parler d’activité antivirale(contre virus), antimicrobien(contre microbe) et anti-inflammatoire de ces composés bioactifs.
+
+    Elle se mesure par des techniques physico chimique liée à l’activité ciblé, par exemple avec l’activité anti-oxydante d’une molécule on peut utiliser la méthode \textbf{ORAC} (oxygene radical absoption capacity) capacité d’absorption des radicaux oxygène.
+
+\section{Etat de l'art}
+\subsection{HRMS - GNPS}
+
+    L'outil GNPS est la résultante de l'article \cite{wang2016sharing} qui attaque la problématique de partage et d'extraction de connaissance d'une grande plage de données spectrales MS/MS dans le but d'éffectuer la déréplication en utilisant comme modèle final d'interprétation les réseaux moléculaires. L'article se base sur le fait que la capture d'information structurale faite actuellement ( selon son temps) d'un ne se base pas sur une grande quantité de spectre et de deux n'utilise pas des modèles d'interprétation capturant vraiment l'espace chimique d'une grande quantité de spectres. Il a ainsi conduit à une documentation technique disponible \href{https://github.com/CCMS-UCSD/GNPSDocumentation/tree/notebooks-docs}{ici}. Quel est l'approche qu'utilise GNPS?
+    
+\subsubsection{Workflow de GNPS}
+    Le workflow de GNPS \ref{fig:gnps3} est présent sur la figure suivante: 
+    \begin{enumerate}
+        \item En entrée on a les spectres MS/MS issus d'une expérience précise
+        \item On effectue parallèlement :
+            \begin{itemize}
+                \item la recherche de ces dernières dans la banque GNPS afin de savoir s'il sont des molécules \textbf{identifiées}, \textbf{une molécule identifiée} étant une molécule qui possède au moins avec une molécule de la base GNPS \textbf{un score de cosinus de simmilarité strictement supérieur à 0.7}, il faut noter que la cosinus de simmilarité est décrit par la formule suivante 
+                    \begin{equation}
+                        \cos(sp1, sp2) = \frac{<sp1, sp2>}{||sp1||\times||sp2||}
+                    \end{equation}
+                    $$\ avec\ \cos(sp1, sp2) \in [-1, 1]$$
+                Et que si $\cos(sp1, sp2) = 1$ alors on a une correspondante directe. 
+                
+                on ajoute ainsi les métadonnées liés aux spectres à savoir l'activité biologique, l'ion précurseur, le nom de la molécule, l'origine du spectre ... etc
+                \item l'alignement spectrale de ces spectres s'appuyant sur un algorithme qui permet sur la base de leur simmilarité de cosinus de construire un réseau moléculaire telque les noeuds proches indique une simmilarité proche \ref{fig:gnps2}
+                
+            \end{itemize}
+            
+        \item on ajoute aux noeuds du réseau les métadonneés liées aux spectres correspondantes, ce qui constitue le réseau moléculaire finale
+    \end{enumerate}
+    \begin{figure}
+        \begin{center}
+            \includegraphics[scale = 0.6]{Images/GNPS8.png}
+        \end{center}
+        \caption{Alignement spectrale du surfacin C13[M+Na], C14[M+Na] et C15[M+Na]}
+        \label{fig:gnps2}
+    \end{figure}
+    
+    On dégage ainsi un certains nombre de notions
+    \begin{itemize}
+        \item \textbf{molécule identifiée}: molécule qui possède au moins avec une molécule de la base GNPS $\cos(sp1, sp2) > 0.7$
+        \item \textbf{molécule putative}: molécule non identifiée, mais voisin directe de ceux identifiées
+        
+        \item \textbf{réseau identifié}: sous réseau du réseau moléculaire, qui ne possède que des noeuds identifiés
+
+        \item \textbf{réseau non identifié}: sous réseau du réseau moléculaire, qui ne possède que des noeuds non identifiés
+
+        \item \textbf{réseau exploratoire}: réseau construit sur la base de molécule identifiées sous la base de score de cosinus $\cos(sp1, sp2) > 0.63$
+    \end{itemize}
+    \begin{figure}
+        \begin{center}
+            \includegraphics[scale = 0.25]{Images/GNPS4.png}
+        \end{center}
+        \caption{Workflow de déréplication GNPS}
+        \label{fig:gnps3}
+    \end{figure}
+
+
+\subsection{RMN - MADByTE}
+
+    L'outil MADByTE est la solution de l'article \cite{egan2021development} qui attaque la problematique d'annotation de mixtures(mélanges) complexes de produits naturelles en utilisant la spectrométrie 2D-RMN. Pour resoudre cette problematique des solutions ont été crées mais toutes n'étaient pas suffisamment simple pour caractériser l'espace chimique dans les spectres 2D-RMN, c'est a dire n'étaient pas suffisament simple pour avoir des résultats aisement interprétables pour l'annotation ou simplement l'hierarchisation des spectres 2D-RMN ce qui pourrait ètre utile pour la déréplication. cette solution a été réalisé et mis à la disposition du publique sur le dépot git \href{https://github.com/liningtonlab/madbyte}{MADByTE}.  Quel est l'approche qu'utilise MADByTE?
+
+\subsubsection{Workflow de MADByTE}
+    le workflow de MADByTE \ref{fig:madbyte3} pour obtenir le réseau de simmilarité est le suivant:
+    \begin{enumerate}
+        \item \textbf{aquisition des données spectrales HSQC et TOCSY}: 
+        
+        cette aquisition est réalisée par des expériences physico-chimiques des composés qui neccéssite l'intervention des experts
+        \item \textbf{selection des pics de HSQC et TOCSY des composés} :
+        
+        cette étape constitue une étape de prétraitement des spectres HSQC et TOCSY qui passent par les étapes suivantes:
+        \begin{enumerate}
+            \item suppréssion des pics des solvants et d'eau: 
+            
+            cela ce fait à bande des déplacements chimiques de $\pm2ppm$ pour la dimension $\ce{^{1}_{}H}$ (la dimension $\ce{^{1}_{}H}$ car dans les solvants telque DMSO-d6 et méthanol-d4, les pics d'hydrogène $\ce{^{1}_{}H}$ sont grandement plus présents) 
+            
+            \item suppréssion des pics invalides de spectres HSQC obtenus : 
+            
+            les pics invalides sont caractérisés par les déplacements chimiques sur les dimensions $\ce{^{1}_{}H}$ et $\ce{^{13}_{}C}$ se trouvent sur le tableau \ref{tab:madbyte1} 
+            \begin{center}
+                \begin{tabular}{|C{2cm}|C{1cm}|}
+                    \hline $\ce{^{1}_{}H}$  & $\ce{^{13}_{}C}$ \\
+                    \hline  > 7 ppm & < 50 ppm\\
+                    \hline  < 7 ppm & > 170 ppm\\
+                    \hline  < 2.4 ppm & > 100 ppm\\
+                    \hline 
+                \end{tabular}
+                \captionof{table}{tableau de déplacements chimiques invalides des spectres HSQC}
+                \label{tab:madbyte1}
+            \end{center}
+
+            \item suppréssion des pics invalides des spectres TOCSY 
+            les pics invalides sont ceux issus des déplacements chimiques des dimensions 
+            $\ce{^{1}_{}H}$ $\leq$ 2.5 ppm 
+
+            \item symétrisation des spectres TOCSY obtenus : 
+            
+            Les données TOCSY sont symétrisées en corrigeant les déplacements chimiques f1(dimension $\ce{^{1}_{}H}$ de plus faible résolution) par rapport aux valeurs f2 (dimension $\ce{^{1}_{}H}$ de plus haute résolution) correspondantes, on tient compte des erreurs de déplacements suivant les dimensions 
+
+            \item croisement des couples de spectres HSQC et TOCSY : 
+            
+            la liste des signaux TOCSY est comparée à la liste des pics HSQC dans la dimension $\ce{^{1}_{}H}$, et les signaux TOCSY n'ayant pas de correspondance avec les signaux HSQC correspondants sont supprimés, et on tient compte des erreurs de déplacements suivant les dimensions 
+            
+        \end{enumerate}
+        L'érreur pour H est 0.05 ppm et pour C est 0.40 ppm
+        \item \textbf{création des caractéristiques des systèmes de spins des composés} :
+        
+        Les caractéristiques des systèmes de spin pour les échantillons individuels sont créées en générant un graphe dirigé à partir de chaque tableau de pics représentant le spectre TOCSY obtenu, où les noeuds représentent les signaux $\ce{^{1}_{}H}$ dans le spectre TOCSY, et les arêtes représentent les pics croisés TOCSY entre les signaux $\ce{^{1}_{}H}$. les noeuds ne contenant qu'une seule arete sont supprimés. De même, les arêtes entre les noeuds sont supprimées si elles ne sont pas réciproques \ref{fig:madbyte2} (c'est-à-dire si elles ne sont pas observées des deux côtés de la diagonale du spectre TOCSY).
+
+        
+        \textbf{En gros une caractéristique du système de spin est une réprésentation sous forme de graphe d'un spectre TOCSY symétrisé et croisé avec un spectre HSQC correspondant suivant la dimension $\ce{^{1}_{}H}$; ce graphe pouvant toujours etre vu comme un tableau }.
+
+
+        \item \textbf{calcul d'une matrice de corrélation de ces caractéristiques} [partie à vérifier]: utilisé pour obtenir les scores de ressemblance en ces caractéristiques.
+
+        Le score de ressemblance entre les graphes A et B de deux caractéristiques de spins représentant des spectres TOCSY et HSQC obtenues à la fin de l'étape 3, est obtenu de la façon suivante, en notant $NI_{A,B}$ le nombre de couples $(\ce{^{1}_{}H},\ce{^{13}_{}C})$ identiques de A et B; et $N_{A,B}$ le nombre de couples $(\ce{^{1}_{}H},\ce{^{13}_{}C})$ correspondantes de A et B
+        \begin{equation}
+            score(A,B) = \frac{NI_{A,B}}{N_{A,B}}
+        \end{equation}
+        Les couples sont identiques au sens où ils sont correspondants , avec les memes valeurs de pics.
+
+        on considère que deux échantillons sont simmilaires si et seulement si leur score de simmilarité dépassent un seuil défini par l'utilisateur (par défaut égale à 0.5)
+        
+        \item \textbf{construction du réseau de simmilarité} :
+        
+        Le réseau est obtenu comme suit:
+        \begin{enumerate}
+            \item  pour chaque échantillon on a d'abord un noeud équivalent qui est reliés à ses noeuds réprésentants les déplacements chimiques valides $\ce{^{1}_{}H}$ qui sont les noeuds du système de spin
+            \item  pour chaque paire d'échantillons simmilaires; les noeuds des caractéristiques de spin conduisant la simmilarité sont reliés entre eux, on parle de \textbf{réseau d'association complèt}.
+        Afin d'éviter les encombrements des noeuds non utilisés pour représenter la simmilarité entre les échantillons, on les supprime, on parle donc de \textbf{réseau d'association}, et vue que les noeuds de simmilarités sont identiques entre paires d'échantillons on les fusionent et lç on parle de \textbf{réseau d'association hybride}
+        \end{enumerate}
+       
+    \end{enumerate}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth/2]{Images/madbyte3.png}
+        \caption{Workflow de MADByTE}
+        \label{fig:madbyte3}
+    \end{figure}
+
+\section{Méthodologie}
+Les deux méthodes précédentes s'appuient sur des mésures de simmilarité différentes pour construire les réseaux moléculaires ou encore de simmilarité. Pour GNPS on utilise le cosinus de simmilarité, et au niveau de MADByTE, on utilise tout simplement un taux de ressemblance des caractéristiques du système de spin. On peut dès lors penser que pour combiner les deux solutions on pourrait juste s'appuyer sur une mésure de simmilarité incluant ces deux dernieres simmilarité en attribuant des poids au mésure de simmilarité après normalisation des mésures, ou encore on pourrait plutot pondérer le score de simmilarité avec le taux de simmilarité de spectres TOCSY+HSQC. Et donc l'appretissage de cette mésure est donc un pend d'analyse intéréssante.
+
+\section{Evaluation}
+
+\section{conclusion}
+Il était question pour nous de réaliser un modèle d’apprentissage par ensemble des méthodes HRMS et RMN pour identifier les réseaux moléculaires de produits naturels et autres afin d’apporter une aide significative pour la recherche de principes actifs spécialement dans le domaine médicinal pour la recherche de médicaments sur la base de produits naturelles telque Artémésia. Il faut le rappeler ceci est un cas pratique pour répondre à la problématique d'identification de réseaux moléculaires qui a induit nos recherches. Nous avons démontré par le biais d'évaluation d'experts spécifiquement de la qualité des réseaux identifiés et de la découverte d'une nouvelle molécule bioactive contenu dans la molécule, comparée à l'utilisation de MADByTE et GNPS communément et séparement, ce qui a permis de répondre à la question de performance.
+
+Des problèmes palpables ont été recensés lors de l’élaboration du modèle, le problème de dimensionnalité des données et surtout la carence de données pour l’entrainement du fait des outils générant ces données, on peut parler là du coût grande de l’achat et de la maintenance, du temps de génération d’une observation qui est l’est relativement aussi. Il serait intéressant de penser à la génération automatique de ces données et des plongements de ces dernières dans des dimensions plus commodes. Comment le faire ? est une interrogation qui porte à notre attention.
+
+{\footnotesize \bibliographystyle{acm}
+\bibliography{reference_GNPS_MADByTE}}
+
+
+%\theendnotes
+
+\end{document}
+
+
+
+
+
+
+

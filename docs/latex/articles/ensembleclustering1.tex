@@ -1,0 +1,260 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Lecture 7: Clustering Ensemble}
+    {Jing Gao, SUNY Buffalo}
+    
+    \tableofcontents
+    \vspace{20cm}
+    \section{Introduction}
+    Dans le but de combiner les algorithmes MADByTE et GNPS, pour rendre plus aisée l'identification des réseaux moléculaires,
+    On pourrait combiner les clusters de molécules qu'on peut obtenir d'eux. 
+    Cette combinaison peut etre réaliser par les méthodes d'ensemble de clustering, 
+    qui permettent d'associer des clusters fournis d'algorithmes de clustering sur des observations.
+    Dans ce document nous allons  d'abord explorer les différents moyens de définir les entrées des algorithmes de clustering de base pour rendre la combinaison plus efficace, et ensuite nous allons présenter les différentes méthodes pour réaliser cette combinaison, qui ont été décrit dans la présentation partagée de titre \textbf{Clustering Ensemble}, fait par Jing Gao et Suny Buffalo.
+    
+    \section{Contexte}
+    Pour combiner des clusters d'observations issues d'algorithmes de base (qu'on peut appeller "weak-learners"), en un nombre  donné de clusters, comme dans la figure \ref{fig:ens1}, 
+    un ensemble de recherches ont été menées.
+    Ces recherches ont conduit à la création des algorithmes dit d'ensemble de clustering, qui se basent sur la formulation suivante du problème.
+
+    Soient 
+    $X = \{ x_1, x_2, \dots, x_N \}$ un ensemble de $N$ observations qui constituent les données;
+    $B = \{ B_1, B_2, \dots , B_M \}$ l'ensemble des $M$ groupes de clusters fournis par les algorithmes de clustering de base sur ces données, 
+    où $B_m(i)$ est l'étiquette du cluster dans lequel l'observation $i$ a été mis par l'algorithme de base $m$.
+
+    % image 
+    \begin{figure}
+    	\centering
+    	\includegraphics[width = \linewidth]{Images/ens1.png}
+    	\caption{Processus général}
+    	\label{fig:ens1}
+	\end{figure}
+    
+    Construire des clusters combinant ceux de $B$, revient à construire un ensemble $C$ de $K$ clusters, 
+    qui se rapprocheront le mieux possible de ceux de $B$.
+    En d'autres termes on souhaite un ensemble de clusters final, qui aura un minimum de désagrément avec les clusters des algorithmes de base.
+    
+    De là, on peut se rendre compte qu'une des principales difficultés à franchir est celle de trouver les correspondances
+    entre les différents clusters des algorithmes de base.
+    De plus il est important de noter que les algorithmes de base fournissant les clusters de base, 
+    prennent des entrées, comme les données et le nombre de clusters, qui bien définies, peuvent améliorer la qualité de la combinaison.
+
+    Dans la suite de ce document nous présenterons les différents moyens de définir les entrées des algorithmes de clustering de base, 
+    et les différentes approches qui ont été proposées dans la présentation.
+
+    \section{Différents moyens de définition des entrées des weak-learners}
+    Pour définir les entrées des algorithmes de base, on peut procéder comme suit:
+    \begin{itemize}
+        \item Utiliser pour chacun des algorithmes, un nombre aléatoire de clusters  
+        \item Utiliser pour chacun des algorithmes, des échantillons (sous ensemble) des observations 
+        \item Utiliser pour chacun des algorithmes, des échantillons de caractéristiques
+        \item Dans le cas où les algorithmes de base sont les mêmes, on peut les exécutés avec des entrées différentes et des paramètres différents
+        \item Pour les algorithmes dit \textit{on-line}, on peut varier l'ordre des observations pour changer les différentes exécutions des algorithmes
+    \end{itemize}
+    
+    On remarque donc que ces méthodes visent à faire en sorte que les algorithmes de base fournissent des clusters différents, grâce à des différentes informations internes et externes.
+
+    \section{Différents algorithmes d'ensemble de clustering}
+    
+    \subsection{Algorithmes de correspondance forte}
+    
+    L'idée de ces algorithmes est de rechercher la correspondance entre les clusters de weak-learners différents,
+    en supposant qu'on a pour chaque cluster d'un weak-learner, son cluster correspondant dans un autre weak-learner.
+    On peut donc voir que cela conduit à trouver un ré-ordonnancement, une permutation entre les clusters de différents weak-learners, qui permet d'avoir le consensus le plus élevé entre
+    les clusters des weak-learners. L'image \ref{fig:ens2} le présente bien.
+
+    \begin{figure}
+    	\centering
+    	\includegraphics[width = \linewidth]{Images/ens2.png}
+    	\caption{Processus général des algorithmes de correspondance forte}
+    	\label{fig:ens2}
+	\end{figure}
+    
+    C'est dans cette optique que les chercheurs Sandrine Dudoit et Jane Fridlyand,
+    ont proposés deux versions de l'algorithme Bagging dans l'article de référence \cite{dudoit2003bagging}, qui en utilisant des échantillons d'observations, 
+    calculent ces différentes permutations, et par la suite retrouvent pour chaque observation, le cluster où cette observation se trouve le plus.
+    
+    Comme observation, nous avons :
+    \begin{itemize}
+        \item La possibilité de connaitre les correspondances entre les regroupements de base. 
+        Connaître cela peut nous permettre de dire, dans le cas où on a le même algorithme de base, que chaque modèle a capturé l'espace des données sous des angles différents qui se correspondent.
+        \item La recherche des correspondances, par permutation des étiquettes de clusters, peut etre couteux en temps
+        \item Un même nombre de clusters pour chaque regroupement de base
+        \item La possibilité qu'une observation ne puisse pas être choisir lors d'un échantillon d'observations
+    \end{itemize}
+    
+    De ces observations, nous pouvons conclure que, ils ne peuvent pas ètre utiliser dans notre cas car,
+    GNPS et MADByTE fournissent des clusters de nombres non définies.
+    
+    \subsection{Algorithmes de correspondance légère}
+    
+    Pour réduire le temps du calcul des algorithmes de correspondance forte, 
+    on pourrait calculer pour chaque weak-learner de base, 
+    les correspondances entre ses clusters et les clusters qu'on souhaite obtenir.
+
+    Pour le faire, Ces algorithmes passent généralement par la formulation qui suit:
+    
+    Considérons $S(m)$ comme étant la matrice de correspondance entre les clusters du $m-ème$ weak-learner et les clusters finaux,
+    de tel sorte que 
+    $S_{k',k}(m) = 1$ si le cluster $k'$ du weak-learner $m$ de base correspond au cluster finale $k$, 
+    $S_{k',k}(m) = 0$ sinon.
+    Considérons $M(m)$ comme étant la matrice d'assignation des observations aux clusters du $m-ème$ weak-learner où 
+    $M_{i,k'}(m) = 1$ si l'observation $i$ est dans le cluster $k'$ du weak-learner de base, 
+    $M_{i,k'}(m) = 0$ sinon.
+
+    De là, obtenir les assignations des observations aux clusters finaux, par rapport à chaque weak-learner de base, 
+    revient donc à multiplier leur matrice d'assignation du clustering avec leur matrice de correspondance des observations.
+    Ainsi pour faire un choix entre les assignations qu'on obtient selon le point de vue de chaque weak-learner de base, 
+    on va chercher la matrice $C$ d'assignation des observations aux clusters finaux, qui se rapproche le plus d'eux.
+
+    D'où le problème d'optimisation générale:
+    \begin{equation}
+        \min {\| C - MS \|}^2
+    \end{equation}
+    
+    On a donc deux variables à rechercher pour résoudre le problème, 
+    les matrices de correspondances entre les clusters de base et les clusters finaux,
+    et la matrice d'assignation des observations aux clusters finaux.
+
+    Pour résoudre ce problème comme dans l'article \cite{long2005combining}, on utilise l'algorithme EM, où les matrices de correspondance 
+    correspondent aux variables cachées et la matrice d'assignation est la variable qu'on recherche.
+
+    Comme observation, nous avons :
+    \begin{itemize}
+        \item Les correspondances entre les clusters de base et les clusters finaux, qui sont généralement calculées par mise à jour itérative
+        \item La considération du fait que les weak-learners de base peuvent fournir des clusters de nombres différents
+        \item La possibilité qu'une observation ne puisse pas être choisir lors d'un échantillon d'observations
+        \item Deux clusters d'un meme weak-learner de base peuvent correspondrent à un même cluster finale
+        \item La ressemblance entre les clusters de weak-learners différents ne sont pas réellement pris en compte
+    \end{itemize}
+
+    De ces observations, on ne pourrait pas vraiment utiliser ces algorithmes,
+     car principalement la ressemblance entre les clusters de clusterings différents ne sont pas réellement pris en compte.
+
+    \subsection{Algorithmes basés sur les observations}
+    
+    L'idée ici est de représenter une observation, par l'ensemble des étiquettes de clusters dans lesquels il se trouve. Ce qui permet de construire de nouveaux clusters après
+    exécution d'un second algorithme de clustering.
+
+    De là on peut définir, la similarité entre deux observations comme étant le pourcentage de weak-learners qui les assignent dans le même cluster;
+    et la dissimilarité entre eux comme étant le pourcentage de weak-learners qui ne les assignent pas dans le même cluster.
+
+    Ce nouveau clustering ayant principalement pour but de retrouver les clusters qui partagent le plus d'observations avec les clusterings de base, 
+    on définit généralement des fonctions pour évaluer le clustering finale en utilisant les nouvelles représentations des observations:
+    \begin{itemize}
+        \item La moyenne des informations mutuelles normalisées entre les clusters finaux et les clusters de base décrit dans l'article \cite{strehl2002cluster}
+        \begin{equation}
+            \max_C \frac{1}{M}\sum_{m=1}^{M} NMI(C, B(m))
+        \end{equation}
+
+        \item La fonction objective du clustering de corrélation décrit dans l'article \cite{gionis2007clustering}
+        \begin{equation}
+            \max \sum_{i,j \text{, } C(i)=C(j)} (1 - S_{i,j}) + \sum_{{i,j} \text{, } C(i) \neq C(j)}  S_{i,j}
+        \end{equation}
+
+    \end{itemize}
+    
+    Comme algorithme de clustering utilisés, on utilise généralement:
+    
+    \begin{itemize}
+        \item Clustering Hierachique \cite{gionis2007clustering}: CAH, CDH 
+
+        \item Algorithme LocalSearch modifié \cite{gionis2007clustering}:
+        On initialise au départ les clusters aléatoirement ou non, puis on change le cluster d'une observation,
+        si en le faisant la valeur de la fonction objective s'améliore, on le fera tant qu'il est possible d'améliorer la fonction objective 
+
+        \item Algorithmes de partitionnement de graphes: CSPA, ...
+        Ici on réalise le partitionnement du graphe des données où un nœud est une observation et une arête porte la similarité entre observations.
+        Il faut noter que l'algorithme CSPA utilise le package METIS \cite{karypis1998software} pour réaliser la coupure du graphe des observations.
+
+        \item L'algorithme de model de mélange (EM):
+        Ici on utilise comme entrées de l'algorithme EM les nouvelles représentations des observations, pour fournir les clusters finaux.
+        Comme dans l'article \cite{topchy2005clustering}, on utilise généralement un mélange de $k$ composantes suivant des distributions multinomiaux car plus adaptées pour des données catégorielles. 
+            
+    \end{itemize}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = \linewidth]{Images/ace_workflow.png}
+        \caption{Processus de l'algorithme ACE \cite{alqurashi2019clustering}}
+        \label{fig:ace1}
+    \end{figure}
+
+    
+    Comme observation nous avons : 
+    \begin{itemize}
+        \item Ces méthodes permettent de tenir compte du fait qu'une observation n'a pas été assignée à un cluster par au moins un clustering de base
+        \item Ces méthodes tiennent compte du fait que les weak-learners de base peuvent fournir des clusters de nombres différents 
+        \item On assigne les observations à des clusters grâce à leur occurrence
+        \item On ne considère pas les poids des différents weak-learners de base pour construire les clusters finaux
+        \item On ne considère plus vraiment la constitution des clusters de base en terme d'observation
+    \end{itemize}
+    
+    Par rapport à notre cas, toutes ces approches peuvent être utilisées pour le vote majoritaire et non pour le vote pondéré.
+    
+    \subsection{Algorithmes basés sur les clusters}
+    
+    Dans l'optique de s'appuyer directement sur les clusters de base, on représente chacun d'eux comme 
+    un vecteur binaire d'appartenance des observations. on regroupe ces clusters en $K$ groupes de clusters, 
+    puis on assigne une observation au groupe de clusters qui possède le plus de clusters contenant l'observation.
+    
+    C'est le même workflow que l'algorithme MCLA \cite{strehl2002cluster} suit, à la différence qu'il regroupe les clusters de base avec le package METIS \cite{karypis1998software} .
+    
+    Nous avons comme observations :
+    \begin{itemize}
+        \item On se rapproche plus de l'idée du vote
+        \item On tient compte la ressemblance des clusters de base 
+        \item On assigne les observations à des clusters grâce à leur occurrence
+        \item On ne tient pas compte des importances des weak-learners de base pour le vote
+        \item On tient compte du fait qu'une observation ne soit pas assigner à un cluster par au moins un clustering de base
+    \end{itemize}
+
+    Pour notre cas, ces algorithmes peuvent être utilisés dans notre cas pour le vote majoritaire, et non pour le vote pondéré.
+
+    \subsection{Algorithmes basés sur les clusters et les observations}
+    
+    L'idée est de tenir compte des observations et des clusters pour construire les clusters finaux en les représentant dans une structure commune.
+    Généralement on représente les données de clusterings de base, en deux types de graphe:
+
+    \begin{itemize}
+        \item hyper-graphe :
+        Ici un noeud est une observation et une hyper-arête est un cluster de base
+        \item graphe bipartie :
+        Ici on a deux ensembles de noeuds, l'ensemble des noeuds des observations et l'ensemble des noeuds des clusters de base,
+        une arête est la liaison entre une observation et un cluster de base qui le contient.
+    \end{itemize}
+    Ces graphes pourront donc permettre, par leur coupure d'obtenir les $K$ clusters finaux.
+
+    Par exemple, l'algorithme HGPA \cite{strehl2002cluster} représente les clusters de base et les observations comme un hypergraphe,
+    et utilise le package HMETIS \cite{karypis1998hypergraph} pour effectuer la coupure de ce graphe.
+    
+    Nous avons comme observations :
+    \begin{itemize}
+        \item On ne tient pas compte des importances des weak-learners de base pour le vote
+        \item On intègre les clusters de base et les observations simultanément
+        \item On tient compte du fait qu'une observation n'a pas été assigné à un cluster par au moins un weak-learner de base
+    \end{itemize}
+
+    Pour notre cas, ces algorithmes peuvent être utilisés pour le vote majoritaire, mais pas pour le vote pondéré.
+
+    \section{Conclusion}
+    En somme, il était question pour nous de présenter les algorithmes d'ensemble de clustering, 
+    ainsi que des différents moyens possibles de définir les entrées des algorithmes de clustering qui fourniront les clusters de base.
+    Nous avons remarqué dans notre cas, que les algorithmes basés sur les observations et ceux basés sur les clusters se rapprochaient plus de l'idée 
+    du vote majoritaire. 
+    Néanmoins aucun de ces algorithmes ne considéraient les poids des algorithmes de clustering de base dans la construction des clusters finaux.
+    Ainsi existe-t-il des algorithmes qui le font ?
+
+
+\bibliographystyle{plain}
+    \bibliography{reference_GNPS_MADByTE}
+\end{document}

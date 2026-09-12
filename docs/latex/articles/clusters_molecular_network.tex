@@ -1,0 +1,216 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Construction de clusters de molécules issus de réseaux moléculaires}
+    {}
+
+    \tableofcontents
+    \vspace{20cm}
+    
+    \section{Introduction}
+    Pour pouvoir identifier les molécules inconnues et contenues dans les réseaux moléculaires, les biologistes réalisent des expériences guidées, sur la base de potentiels indices que fournissent les groupes de molécules contenus dans les réseaux.
+    Ces clusters sont généralement détectés en s’appuyant sur la densité des zones de molécules du réseau.
+    Fort de ce constat, combiner GNPS et MADByTE, peut revenir à combiner les clusters aperçus dans les réseaux qu'on obtient d'eux.
+    De ce fait comment extraire automatiquement ces clusters, pour pouvoir les combiner par la suite ?
+    C'est dans le but de répondre à ce problème, qu'on s'intéresse à l'algorithme DBSCAN, et à ces dérivés SCAN et NS-DBSCAN qui permettent de regrouper des observations contenus dans des graphes non pondérés.
+    Dans les lignes qui suivent, nous allons présenter l'algorithme DBSCAN, puis les algorithmes SCAN et NS-DBSCAN, et proposerons une version de l'algorithme DBSCAN pour résoudre le problème.
+    
+    
+    \section{L'algorithme DBSCAN}
+    	DBSCAN (Density-Based Spatial Clustering of Applications with Noise) \cite{khan2014dbscan} est un algorithme de clustering utilisé pour regrouper des points de données similaires en définissant un cluster comme une zone à grande densité.
+   	 Définir un cluster comme une zone à forte densité permet implicitement de ne pas définir le nombre $K$ de clusters à l'avance, vu qu'il peut être trouvé en même temps que les clusters.
+   	 
+    	Soit $N(x, \epsilon)$ l'ensemble des observations voisins de l'observation $x$ étant dans le rayon $\epsilon$, on a :
+   	 
+    	\begin{equation}
+        	N(x, \epsilon) = \{ x' | d(x', x) \leq \epsilon\}
+    	\end{equation}
+   	 
+    	L'algorithme DBSCAN \ref{alg:dbscan} s'appuie sur des types d'observations (visibles sur la figure \ref{fig:mod_dbscan}) pour pouvoir construire les clusters:
+    	\begin{itemize}
+   		 \item \textbf{Core Point} : est une observation cœur caractérisée par le fait que le nombre de ses voisins dépasse le seuil de points minimum $MinPts$. Il permet de détecter une zone dense
+   		 \item \textbf{Border Point} : est une observation appartenant au voisinage d'un \textbf{Core Point} mais ne l'est pas. Il permet de définir la limite d'une zone dense
+   		 \item \textbf{Noise Point} : est une observation qui n'est ni \textbf{Core Point}, ni \textbf{Border Point}. Il est une observation séparée des autres, qu'on peut qualifier de bruits et même d'outliers.
+    	\end{itemize}
+	 
+    	\begin{figure}
+   		 \centering
+   		 \includegraphics[width=\linewidth]{Images/dbscan.png}
+   		 \caption{Types clés d'observations de DBSCAN}
+   		 \label{fig:mod_dbscan}
+   	 \end{figure}
+    
+   		 \begin{algorithm}[H]
+       		 \caption{Pseudo code de DBSCAN}
+       		 \label{alg:dbscan}
+       		 \begin{algorithmic}[1]
+       		 \REQUIRE Ensemble de données $X$, rayon de voisinage $\epsilon$, nombre minimum de points $MinPts$
+       		 \ENSURE Clusters $\mathbb{C}$
+   			 \STATE $\mathbb{C} = \emptyset $
+       		 \FORALL{point $x$ de $X$}
+           		 \IF{$x$ n'est pas marqué \textit{visités}}
+   					 \STATE Marquer $x$ comme \textit{visité}
+   					 \IF{$ |N(x, \epsilon)| \geq MinPts$}
+   						 \STATE Créer un cluster $C$ et ajoutez $x$ à $C$
+   						 \STATE Ajouter tous les points de $N(x, \epsilon)$ qui n'ont pas encore été \textit{visités} à $C$ et à $STACK$, et marquer ces points comme \textit{visités}
+   						 \WHILE{$STACK$ n'est pas vide}
+   							 \STATE $x' \leftarrow pop(STACK)$
+   							 \IF{ $ |N(x', \epsilon)| \geq MinPts$}
+   								 \STATE Ajouter tous les points $N(x', \epsilon)$ qui n'ont pas encore été \textit{visités} à $C$ et à $STACK$ et marquer ces points comme \textit{visités}.
+   							 \ENDIF
+   						 \ENDWHILE
+   						 \STATE $\mathbb{C} = \mathbb{C} \cup C$;
+   					 \ELSE
+   						 \STATE Marquer $x$ comme \textit{Noise Point}.
+   					 \ENDIF
+   				 \ENDIF
+   			 \ENDFOR
+       		 \end{algorithmic}
+   		 \end{algorithm}
+
+   		 De part le pseudo code, on peut comprendre intuitivement pourquoi l'algorithme permet de détecter des bruits ou encore les outliers.
+   		 De plus il permet d'éviter de construire des clusters sans pour autant définir le nombre de clusters à l'avance.
+   		 Il faut noter que l'algorithme peut ètre modifé, au niveau de la définition du voisinage d'une observation, en utilisant une mesure de similarité au lieu d'une distance, et en voyant $\epsilon$ comme un seuil de similarité.
+   		 
+   		 Au cour des années, des chercheurs ont continués de l'améliorer, ce qui a conduit à la création des plusieurs algorithmes qu'on peut rétrouver dans la révue de référence \cite{bhattacharjee2021survey}.
+   		 Ces algorithmes ont généralement été créés dans le but de réduire le temps de calcul de DBSCAN, de réduire l'impact de ses paramètres, de prendre en compte de différentes natures des données d'entrée (Image, Texte, \dots) .  
+   		 On retrouve ainsi des algorithmes tels que SCAN (Structural Clustering Algorithm for Networks) et NS-DBSCAN (Network Space - DBSCAN) qui permettent de prendre des graphes
+   		 non pondérés en entrée.
+   		 
+    \section{Algorithmes de densité sur des graphes}
+
+   	 \subsection{Algorithme SCAN}
+   		 SCAN \cite{xu2007scan} est un algorithme de partitionnement de graphe non pondéré, ayant pour objectif de construire les groupes de sommets, en les voyant comme des zones à forte densité de sommets.
+   		 L'idée derrière l'algorithme est de représenter un sommet du graphe par l'ensemble de ses voisins, puis d'utiliser l'algorithme DBSCAN en utilisant le cosinus de similarité comme métrique de similarité pour obtenir les clusters.
+
+   		 Pour le faire, L'algorithme SCAN de pseudo-code \ref{alg:scan} possède les étapes suivantes:
+   		 \begin{enumerate}
+   			 \item On retrouve pour chaque sommet, l'ensemble des sommets qui lui sont adjacents, qu'on nomme structure du sommet
+   			 \item On utilise l'algorithme DBSCAN en considérant, comme similarité entre deux sommets, le cosinus de similarité entre leurs structures
+   		 \end{enumerate}
+
+   		 Il faut noter, qu'il a été parallélisé pour réduire son temps de calcul, ce qui a conduit à l'algorithme ScaleSCAN \cite{shiokawa2018scalescan}.
+   		 
+   		 \begin{algorithm}[H]
+   			 \caption{Pseudo code de SCAN \cite{shiokawa2018scalescan}}
+   			 \label{alg:scan}
+   			 \begin{algorithmic}[1]
+   			 \REQUIRE Graphe $G$, nombre minimum de points $\mu$, rayon de voisinage $\epsilon$
+   			 \ENSURE Clusters $\mathbb{C}$
+   			 \STATE $\mathbb{C} = \emptyset $;
+   			 \FORALL{ sommet non visité $u$ }
+   				 \STATE $C = \{ u \}$;
+   				 \FORALL{ sommet non visité $v \in C$ }
+   					 \IF{$ |N(v, \epsilon)| \geq \mu$}
+   						 \STATE $C = C \cup N(v, \epsilon)$;
+   						 \STATE Marquez $v$ comme visité;
+   					 \ENDIF
+   				 \ENDFOR
+   				 \IF{$ |C| \geq 2$}
+   					 \STATE $\mathbb{C} = \mathbb{C} \cup C$;
+   				 \ENDIF
+   			 \ENDFOR
+
+   			 \end{algorithmic}
+   		 \end{algorithm}
+   		 
+   	 \subsection{Algorithme NS-DBSCAN}
+
+   		 NS-DBSCAN (Network Space - DBSCAN) \cite{wang2019ns} est un algorithme de partitionnement de graphe planaire, qui a pour but
+   		 de regrouper les sommets qui y sont contenus, en voyant ces groupes comme des zones à forte densité de sommets.
+   		 L'idée derrière l'algorithme est, d'utiliser l'algorithme DBSCAN en considérant les sommets du graphe comme des observation,
+   		 en utilisant comme métrique de distance, la distance (longueur du plus court chemin) entre sommets du graphe.
+
+   		 L'algorithme suit les étapes suivantes :
+   		 \begin{enumerate}
+   			 \item On calcule les distances entre observations comme étant la distance entre leurs sommets, en utilisant l'algorithme algorithme LSPD (Local Shortest Path Distance Algorithm) \cite{wang2019ns}
+   			 \item Puis on calcule la densité de voisinage de chaque observation, grâce au paramètre de voisinage epsilon
+   			 \item Utilise DBSCAN en utilisant ces densités de voisinage des observations pour obtenir les clusters
+   		 \end{enumerate}
+   	 
+   	 Malgré le fait que ces algorithmes prennent en entrée des graphes d'observations, ils ne tiennent pas compte de la spécificité des réseaux moléculaires.
+   	 Un réseau moléculaire étant en général un graphe de similarité d'epsilon voisinage, il permet de ne plus calculer la matrice similarité entre observations et d'obtenir leurs voisinages.
+   	 De plus ils ne peuvent pas être utiliser pour les réseaux de MADByTE en particulier, car leurs définitions du voisinage
+   	 d'un sommet ne peut correspondre à celui de ces dernières.
+   	 Pour un réseau de MADByTE, le voisinage d'une molécule est l'ensemble les molécules qui partagent au moins un système de spin avec lui.
+   	 C'est de ces observations que nous proposons un algorithme qui va permettre de tenir compte de la spécificité des réseaux moléculaires.
+
+   	 \section{Algorithme proposé}
+   	 
+   	 L'objectif de l'algorithme est de regrouper les molécules d'un réseau moléculaire, en modélisant un cluster comme une zone d'observations à forte densité.
+   	 Cette manière de voir un cluster est pertinente, car cela se rapproche de la manière dont les biologistes les détectent naturellement.
+
+   	 Pour le faire, nous supprimons l'utilisation inutile de la matrice de similarité entre observations et du rayon de voisinage.
+   	 Vu que la définition du voisinage d'une molécule est spécifique au réseau, nous le considérons comme élément à définir par l'utilisateur.
+   	 Pour notre cas on a le voisinage d'une molécule étant:
+   	 \begin{itemize}
+   		 \item l'ensemble des molécules qui lui sont adjacents, pour un réseau de GNPS
+   		 \item l'ensemble les molécules qui partagent au moins un système de spin avec lui, pour un réseau de MADByTE
+   	 \end{itemize}
+   	 De plus en fonction du réseau, on peut avoir plusieurs types de sommets:
+   	 \begin{itemize}
+   		 \item pour un réseau de GNPS, un sommet est une molécule (spectre)
+   		 \item pour un réseau de MADByTE, on a deux types de sommets, les systèmes de spins et les molécules (spectres) en soit
+   	 \end{itemize}
+
+   	 Pour un réseau $G$, notons $\mathcal{N}(x,G)$ le voisinage de la molécule $x$ et $\text{getNode}(G)$ l'ensemble des molécules du réseau.
+   	 En conservant le nombre minimum de points $MinPts$ qui permet de détecter un voisinage à forte densité.
+   	 on a l'algorithme proposée \ref{alg:moldbscan} suivant:
+
+   	 \begin{algorithm}[H]
+   		 \caption{Pseudo-code de l'algorithme proposé}
+   		 \label{alg:moldbscan}
+   		 \begin{algorithmic}[1]
+   		 \REQUIRE Réseau moléculaire $G$, nombre minimum de points $\text{MinPts}$,
+   		 \ENSURE Clusters $\mathbb{C}$
+   		 \STATE $\mathbb{C} = \emptyset $;
+   		 \STATE $X = \text{getNode}(G)$;
+   		 \FORALL{point $x$ de $X$}
+              \IF{$x$ n'est pas marqué \textit{visités}}
+       			 \STATE Marquer $x$ comme \textit{visité}
+       			 \IF{ $|\mathcal{N}(x, G)| \geq \text{MinPts}$}
+       				 \STATE $C = \{ x \}$;
+       				 \STATE $A = \{ v | v \in \mathcal{N}(x, G), v \text{ n'est pas marqué \textit{visité}} \}$;
+       				 \STATE $C = C \cup A$;
+       				 \STATE $STACK = A$;
+                      \STATE Marquer tous les points de $A$ comme \textit{visité}
+       				 \WHILE{$STACK$ n'est pas vide}
+       					 \STATE $x' = pop(STACK)$;
+       					 \IF{$|\mathcal{N}(x', G)| \geq \text{MinPts}$}
+       						 \STATE $A = \{ v | v \in \mathcal{N}(x', G), v \text{ n'est pas marqué \textit{visité}} \}$;
+       						 \STATE $C = C \cup A$;
+       						 \STATE $STACK = STACK \cup A$;
+       						 \STATE Marquer tous les points de $A$ comme \textit{visité}.
+       					 \ENDIF
+       				 \ENDWHILE
+       				 \STATE $\mathbb{C} = \mathbb{C} \cup C$;
+       			 \ELSE
+       				 \STATE Marquer $x$ comme \textit{Noise Point}.
+       			 \ENDIF
+              \ENDIF
+   		 \ENDFOR
+
+   		 \end{algorithmic}
+   	 \end{algorithm}
+
+    
+\section{Conclusion}
+
+    En définitive, nous avons parlé des algorithmes DBSCAN, SCAN et NS-DBSCAN, et avons proposé une version de l'algorithme DDSCAN pour les réseaux moléculaires.
+    Il était question pour nous de proposer, un algorithme capable de fournir automatiquement les clusters d'un réseau moléculaire, en se rapprochant le plus possible de la détection manuelle faite par les biologistes.
+    L'algorithme proposé est plus flexible que SCAN et NS-DBSCAN, car il est possible de considérer d'autres types de graphes, de par sa modélisation.
+
+    \include{biblographi.tex}
+\end{document}
+
+
+
+

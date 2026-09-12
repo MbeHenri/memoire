@@ -1,0 +1,172 @@
+
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+	\pagecouverture
+	{Clustering ensemble method}
+	{Tahani Alqurashi, Wenjia Wang}
+    
+	\tableofcontents
+	\vspace{20cm}
+	\section{Contexte}
+	Pour combiner GNPS et MADByTE, une analyse des algorithmes d'ensemble de clustering a été faite.
+	De cette analyse, il en est ressorti que les algorithmes de clustering basés sur les clusters sont les plus pertinents pour la combinaison.
+	Parmis l'un deux, on retrouve l'algorithme ACE(Adaptive Clustering Ensemble) \cite{alqurashi2019clustering} crée par Tahani Alqurashi et Wenjia Wang, qui utilise des seuillages de similarité entre clusters, et de similarité d'appartenance des observations aux clusters pour pouvoir construire l'ensemble des partitions finales. Dans les lignes qui suivent, nous présenterons cet algorithme et nous y apporterons par la suite nos observations.
+
+	\section{Algorithme ACE}
+
+	L'idée ici est de construire les clusters finaux par fusion des clusters de base similaire et d'attribuer les observations à ces clusters grâce à leurs pourcentages d'appartenance, en utilisant des seuils de similarité adaptés au besoin.
+	Pour le faire l'algorithme ACE, suit trois étapes qui sont visibles sur la figure \ref{fig:ace1}, et dont on a le pseudo code à l'algorithme \ref{alg:ace} :
+    
+	% figure ace_workflow.png
+	\begin{figure}
+    	\centering
+    	\includegraphics[width = \linewidth]{Images/ace_workflow.png}
+    	\caption{Processus de l'algorithme ACE \cite{alqurashi2019clustering}}
+    	\label{fig:ace1}
+	\end{figure}
+
+	\begin{enumerate}
+    	\item Transformation des clusters issues des algorithmes de base
+   	 
+    	Cette étape consiste à transformer chaque cluster de base en un vecteur binaire où la $i$-eme composante est égale à $1$ si l'observation $i$ est dans le cluster, et $0$ sinon
+   	 
+    	\item Calcul des $K$ groupes de clusters de consensus
+   	 
+    	Cette étape consiste à construire $K$ groupes des clusters de base en deux temps.
+   	 
+    	Dans un premier temps, on fusionne les clusters, qui ont une similarité (coefficient de Pearson modifié appellé "set-correlation" \ref{equa:ace1}) supérieur à un seuil donné $\alpha_1$ et adapté pour obtenir au moins $K$ groupes.
+    	Dans un second temps, on va vérifier si on a $K$ groupes qui ont au moins une observation certaine d'y être, certaine dans le sens où la similarité d'appartenance de l'observation au groupe (mesurée en utilisant la formule \ref{equa:ace2}) dépasse un seuil $\alpha_2$ donné.
+    	Si c'est le cas, on sélectionne ces groupes, et dans le cas contraire on va séparer les $K$ groupes qui ont les plus grandes moyennes de similarité d'appartenance d'observations, des autres.
+   	 
+    	\item Assignation des observations aux groupes
+   	 
+    	Cette étape consiste à construire les clusters finaux, en assignant les observations aux $K$ groupes obtenus qui peuvent être vus comme des clusters.
+    	Cela s'effectue, en assignant les observations aux groupes dont elles sont certaines d'appartenir, au sens où les similarités d'appartenance des observations aux groupes, dépassent le seuil $\alpha_2$.
+    	Les autres observations seront ajoutées aux clusters dont elles perturberont le moins la qualité.
+    	Cette qualité de groupe est calculée en évaluant la variance des similarités d'appartenance des observations d'un groupe, de formule \ref{equa:ace3}.
+   	 
+	\end{enumerate}
+
+	On peut donc voir qu'il est important de définir, les similarités utilisées, la qualité de cluster utilisé et les types d'observations selon qu'elles soient certaines d'appartenir à un cluster ou non.
+
+	La similarité entre deux groupes $C_1$ et $C_2$ est évaluée en utilisant une version du coefficient de corrélation de Pearson proposé par Houle \cite{houle2008relevant} pour les clusters.  
+	En considérant $n$ étant le nombre d'observations, on a la formule suivante:
+    
+	\begin{equation}
+    	\begin{split}
+        	& S_c(C_1,C_2) = \frac{ | C_1 \cap C_2 | - \frac{| C_1 | | C_2 |}{n} }{\sqrt{ | C_1 | | C_2 | \left( 1 - \frac{| C_1 |}{n} \right)\left( 1 - \frac{| C_2 |}{n} \right) }}
+        	\\
+        	& = \frac{ n \times Cos(C_1 , C_2) - \sqrt{| C_1 | | C_2 |} }{\sqrt{ \left( n - | C_1 | \right)\left( n - | C_2 | \right) }}
+        	\\
+        	& \text{ avec $Cos(C_1, C_2) = \frac{| C_1 \cap C_2 |}{ \sqrt{| C_1 | | C_2 |} }$}
+    	\end{split}
+    	\label{equa:ace1}
+	\end{equation}
+
+	La similarité d'appartenance d'une observation à un groupe est vue comme le pourcentage du nombre de clusters du groupe, dans lesquels l'observation a été vue.
+	De là on a la formule suivante:
+   	 
+	\begin{equation}
+    	S_x(x_i,c_g) = \frac{\theta(x_i, c_g)}{ max\{ \theta(x_i, C) \} }
+    	\label{equa:ace2}
+	\end{equation}
+	avec, $x_i$ étant la $i$-ème observation, $c_g$ étant le $g$-ème groupe de clusters, $C$ étant l'ensemble des groupes de clusters, $\theta(x_i, c_g)$ étant le nombre de clusters du $g$-ème où on trouve l'observation.
+
+	On a sur la base de cette similarité et d'un seuil $\alpha_2$, plusieurs types d'observations:
+	Soit $x_i$ une observation et $c_g$ le groupe de clusters,
+	\begin{itemize}
+    	\item $x_i$ est certaine si $S_x(x_i,c_g) > \alpha_2$
+    	\item $x_i$ est incertaine si $S_x(x_i,c_g) > \alpha_2$
+    	\item $x_i$ est totalement certaine si $S_x(x_i,c_g) = 1$
+    	\item $x_i$ est totalement incertaine si $S_x(x_i,c_g) = 0$
+	\end{itemize}
+
+	Pour pouvoir ainsi évaluer la qualité d'un groupe $c$, on calcul la variance $\text{Var}(c)$ des similarités d'appartenance de ces observations, ayant pour formule:
+	\begin{equation}
+    	\text{Var}(c) = \frac{1}{ \|c\|} \sum_{i=1}^{\|c\|} (S_x(x_i,c) - \rho_c)
+    	\label{equa:ace3}
+	\end{equation}
+	avec $\rho_c$ la moyenne de similarité d'appartenance d'observations du groupe $c$.
+    
+	%algorithme
+	\begin{algorithm}[H]
+    	\caption{Algorithme ACE \cite{alqurashi2019clustering}}
+    	\label{alg:ace}
+    	\begin{algorithmic}[1]
+    	\REQUIRE $\Gamma = \{ P_1, P_2, \dots, P_m \}$, $\alpha_1$, $\alpha_2$, $\alpha_{1\small{min}}$, $\Delta\alpha$, $K$;
+    	\STATE $\theta_1$ $\leftarrow$ Transforme les clusters de base de $m$ weak-learners en vecteurs binaires;
+    	\STATE Calcul de la matrice de similarité $S_c$ entre les clusters de $\theta_1$;
+    	\WHILE{True}
+        	\STATE $\theta_1$ $\leftarrow$ Fusion(clusters de base, $S_c$, $\alpha_1$);
+        	\IF{$|\theta_1| \geqslant K $}
+            	\STATE break;
+        	\ELSE
+            	\STATE Adaptation: $\alpha_1 \leftarrow \alpha_1 + \Delta\alpha$;
+        	\ENDIF
+    	\ENDWHILE
+    	\STATE $\lambda \leftarrow |\theta_1|$
+    	\WHILE{$\lambda \geqslant K $}
+        	\STATE Calcul de la matrice de similarité $S_c$ entre les groupes de clusters de $\theta_1$;
+        	\STATE Adaptation: $\alpha_1 \leftarrow$ la similarité maximum de $S_c$;
+        	 
+        	\IF{$\alpha_1 < \alpha_{1\small{min}} $}
+            	\STATE break;
+        	\ELSE
+            	\STATE $\text{new}\theta_1 \leftarrow$ Fusion($\theta_1$, $S_c$, $\alpha_1$);
+        	\ENDIF
+
+        	\IF{$|\text{new}\theta_1| < K $}
+            	\STATE break;
+        	\ELSE
+            	\STATE $ \theta_1 \leftarrow \text{new}\theta_1$;
+        	\ENDIF
+    	\ENDWHILE
+
+    	\STATE Calcul de la matrice de similarité $S_x$ d'appartenance des observations aux groupes;
+    	\STATE Calcul du nombre de clusters $\text{nb}_{\small{cls}}$ qui ont au moins une observation certaine en utilisant le seuil $\alpha_2$;
+    	\IF{$ \text{nb}_{\small{cls}} == K $}
+        	\STATE Considération de ces clusters comme candidats aux clusters finaux $P^*$;
+        	\STATE $ \theta_2 \leftarrow$ aucun clusters non-candidats;
+    	\ELSE
+        	\STATE Calcul de la moyenne de similarité d'appartenance d'observations pour chaque cluster, mise dans $\rho$;
+        	\STATE Tri de ces moyennes ($\rho$) par ordre décroissant;
+        	\STATE Adaptation: $\alpha_2 \leftarrow $ $K$-ème valeur de $\rho$;
+        	\STATE Considération des $K$ premiers clusters comme candidats aux clusters finaux $P^*$;
+        	\STATE $\theta_2 \leftarrow$ autres clusters;
+    	\ENDIF
+    	\STATE $P^* \leftarrow$ clusters finaux issues de l'assignation des observations aux $K$ clusters sélectionnés, en utilisant le seuil $\alpha_2$;
+    	\STATE retourner $P^*$;
+    	\end{algorithmic}
+	\end{algorithm}
+
+	On peut voir dans l'algorithme \ref{alg:ace} que, le seuil $\alpha_1$ est adapté pour obtenir au moins $K$ groupes ayant le moins possible d'observations partagées.
+	Plus on augmente ce seuil, plus on augmente le nombre de groupes obtenus par fusion des clusters de base.
+	De plus, le seuil $\alpha_2$ est adapté pour indexer les observations les plus similaires aux groupes.
+    
+
+	\section{Observations}
+	Nous avons comme observation:
+	\begin{itemize}
+    	\item l'algorithme possède beaucoup plus d'hyper-paramètres comparé à l'algorithme MCLA (Meta CLustering Algorithm) \cite{strehl2002cluster}
+    	\item l'algorithme dépend fortement de l'hyper-paramètre qui permet d'adapter le seuil de similarité $\alpha_1$ entre groupe, et du seuil $\alpha_2$ du départ, car s'ils sont mal fournis, amèneront le risque d'avoir des clusters finaux non homogènes
+    	\item l'algorithme est peu sensible au grande variabilité de constitution des clusters de base
+	\end{itemize}
+
+	\section{ Conclusion }
+	En somme, il était question pour nous de supprimer, de présenter l'algorithme ACE et d'y donner nos observations.
+	Nous remarquons déjà d'après les expérimentations dans l'article de référence, que les algorithmes ACE et DSCE (Dual-Similarity Clustering Ensemble) sont plus stables que l'algorithme MCLA car permettent de ne pas considérer les clusters de base inappropriés,
+	qui pourraient apporter une baisse d'homogénéité dans les clusters finaux.
+	De ce fait, comment fonctionne plus en détail l'algorithme DSCE, et est-il possible de construire les clusters finaux en regroupant les clusters de base, en s'appuyant uniquement sur leurs qualités ?
+
+\bibliographystyle{plain}
+	\bibliography{reference_GNPS_MADByTE}
+\end{document}
+

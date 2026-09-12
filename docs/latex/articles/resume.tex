@@ -1,0 +1,627 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Clustering Multivues}
+    {Resumé}
+	\tableofcontents
+	\vspace{20cm}
+    
+	\section{Contexte}
+    	Dans le but de combiner l'utilisation des données HRMS (fait par GNPS) et RMN (fait par MADByTE) de molécules, il était question pour nous de lire et comprendre une série d'articles parlant du clustering multi-vues pour établir une méthode pouvant construire un réseau moléculaire unifié compte tenu les vues que sont les données HRMS et RMN.
+    	Dans les lignes qui suivent nous parlerons tour à tour de ces articles en donnant les intuitions et architectures des algorithmes proposés; des avantages, limites et apport (dans le mémoire) de ces algorithmes; des jeux de données utilisés et de la disponibilité des codes sources dans le cas où ils ont été partagés.
+
+	\section{Article 1: Multi-view Clustering: A Survey}
+    	\subsection{Description de l'article}
+    	L'article \textbf{Multi-view Clustering: A Survey} \cite{yang2018multi} est le résultat d'une enquête menée sur les algorithmes de clustering multi-vues fait par les chercheurs Yan Yang et Hao Wang. Dans cet article, les auteurs décrivent les principes globaux des algorithmes de clustering et donnent une topologie de ces derniers. Les informations liées à l'article sont les suivantes :
+    	\begin{itemize}
+        	\item \textbf{Titre}: Multi-view Clustering: A Survey
+        	\item \textbf{Auteurs}: Yan Yang et Hao Wang
+        	\item \textbf{Année de publication}: 2018
+        	\item \textbf{Journal}: Big Data Mining and Analytics
+    	\end{itemize}
+
+    	\subsection{Intuition et architecture}
+        	\subsubsection{Algorithmes de co-formation}
+        	Dans cette catégorie d'algorithme, l'intuition est de maximiser l'accord (consensus) entre les vues en améliorant les clusters itérativement allant de vues en vues.
+
+        	Au départ on construit les clusters pour chaque vue, et ensuite itérativement ces clusters sont améliorés en utilisant ceux d'autres vues jusqu'à convergence du consensus entre les vues.
+        	La figure \ref{fig:co-train1} illustre assez bien l'architecture. On construit des clusters pour chacune des vues 1 et 2 après entraînement, à la suite on améliore les clusters d'une vue,
+        	en utilisant des connaissances de l'autre dans le but de maximiser la cohésion entre les vues.
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width=\linewidth]{Images/co-training.png}
+            	\caption{Processus général des algorithmes de co-formation \cite{yang2018multi}}
+            	\label{fig:co-train1}
+        	\end{figure}
+   	 
+        	\subsubsection{Algorithmes multi-noyaux}
+        	Dans cette catégorie d'algorithme, l'idée est de projeter les données dans un espace de plus grande dimension (sans le calculer), commun aux vues pour construire de
+        	meilleurs regroupements.
+        	Cela est fait en construisant une fonction noyau unifiée en optimisation une métrique de clustering modifié tel que l'inertie intra-classe utilisé dans l'algorithme KMEANS.
+        	Généralement cette fonction est obtenue par fusion de noyau pour chacune des vues comme on peut le voir sur l'architecture présente sur la figure \ref{fig:multi-kernel1}.
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width = \linewidth]{Images/multi-kernel.png}
+            	\caption{Processus général des algorithmes multi-noyaux \cite{yang2018multi}}
+            	\label{fig:multi-kernel1}
+        	\end{figure}
+
+        	\subsubsection{Algorithmes basés sur les graphes}
+        	Dans cette catégorie d'algorithme, l'idée est de construire un graphe de similarité unifié en fusionnant les graphes d'observations de chacune des vues dans le but d'optimiser des regroupements, tel que présenté à la figure \ref{fig:graph1} qui présente l'architecture.
+        	Généralement on définit une fonction objective de fusion (de consensus) des matrices de similarité des vues, qui après optimisation permet d'obtenir une matrice de similarité unifié.
+        	Ce graphe unifié sera par la suite sujet de classification spectrale standard.
+
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width=\linewidth]{Images/graph.png}
+            	\caption{Processus général des algorithmes basés sur les graphes \cite{yang2018multi}}
+            	\label{fig:graph1}
+        	\end{figure}
+
+        	\subsubsection{Algorithmes basés sur les réseaux}
+        	*****
+        	Dans certains cas, une observation dans une vue peut avoir plusieurs équivalents dans d'autres vues. L'idée pour tenir compte de ces relations, est de construire des graphes pour chaque vue, qui seront considérées comme des réseaux, et d'établir un réseau global de ces réseaux. Cela dans le but de construire les indicateurs de clusters dans chacune des vues en optimisant le consensus entre les vues. L'architecture présente sur la figure \ref{fig:network1} le présente bien.
+    
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width =\linewidth]{Images/reseau.png}
+            	\caption{Processus des algorithmes basés sur les réseaux}
+            	\label{fig:network1}
+        	\end{figure}
+
+        	\subsubsection{Algorithmes spectraux}
+        	*****
+        	Effectuer du clustering revient à trouver k groupes d'observations similaires entre eux.
+        	Cela se fait par une fonction $f$ qui permet d'attribuer à chaque observation un indicateur propre à un des $K$ clusters.
+        	L'idée est de construire cet indicateur unifié (qui est une matrice) aux vues en s'appuyant sur leurs importances dans la construction des clusters.
+        	Les regroupements effectués se basent sur l'algorithme de clustering spectral standard, car permet d'évaluer et optimiser le clustering sur une vue, compte tenu un indicateur et la matrice de similarité des observations. La figure \ref{fig:spectr} présente bien l'architecture globale de ces algorithmes.
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width =\linewidth]{Images/spectrau1.png}
+            	\caption{Processus des algorithmes spectraux}
+            	\label{fig:spectr}
+        	\end{figure}
+
+       	 
+        	\subsubsection{Algorithmes de sous-espaces}
+   	 
+        	L'idée ici est de rechercher une représentation unifiée des vues intégrant le consensus entre eux, pour ensuite y effectuer un algorithme de clustering à une vue unique.
+        	Cela se fait soit directement sur les données des vues, soit dans un espace latent appris, tel que sur la figure \ref{fig:subspace} qui présente l'architecture générale.
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width = \linewidth]{Images/subspace.png}
+            	\caption{Processus général des algorithmes de sous-espaces \cite{yang2018multi}}
+            	\label{fig:subspace}
+        	\end{figure}
+
+    	\subsection{Avantages, limites et apport dans le mémoire}
+        	Dans le tableau qui suit, nous avons essayé de recenser les avantages et limites de chacune des approches présentées
+        	\begin{center}
+            	\begin{longtable}{|p{2.5cm}|p{4.5cm}|p{4.5cm}|p{3cm}|} \hline
+                	~ & {Avantages} & {Limites} & {Apport dans le mémoire} \\
+                    	\hline
+                    	Algorithme de co-formation
+                    	&
+                    	{- améliore itérativement et simultanément les clusters de chaque vue} \newline\newline
+                    	{- permet d’obtenir des regroupements ”optimaux” dans chacune des vues }
+                    	&
+                    	{ reconstruit les clusters à chaque étape, ce qui peut alourdir le temps de calcul des clusters optimaux}
+                    	&
+                    	{ pourrait être utile dans la mesure où on voudrait construire des regroupements optimaux de spectres selon les données RMN et HRMS séparément}
+                    	\\
+                    	\hline
+                    	Algorithmes multi-noyaux
+                    	&
+                    	{- permet d'obtenir des clusters globaux dans un espace unifié de plus grande dimension (sans l'obtenir analytiquement) permettant d'obtenir les meilleurs regroupements } \newline\newline
+                    	{- permet de mettre une nouvelle observation dans un cluster sans pour autant relancer tout le processus} \newline\newline
+                    	{- moins sensible aux bruits} \newline\newline
+                    	{- permet d’obtenir des poids que nous qualifions d'importance des vues par rapport aux observations dans la construction des clusters}
+                    	&
+                    	{- on ne peut pas obtenir l'espace de plus grande dimension cible} \newline\newline
+                    	{- dépend fortement du choix de la fonction noyau unifiée (de la fusion des noyaux de chaque vue)}
+                    	&
+                    	{ permettrait de calculer les importances des données HRMS et RMN dans le but d'améliorer et construire les clusters globaux}
+                    	\\
+                    	\hline
+                    	Algorithmes basées sur les graphes
+                    	&
+                    	{- permet d'obtenir un graphe de similarité unifié utile à l'exploration des données} \newline\newline
+                    	{- permet de capturer globalement l'espace de chaques vues}
+                    	&
+                    	{- sensible aux bruits} \newline\newline
+                    	{- la "classification" d'une nouvelle observation nécessite un ré-apprentissage des paramètres} \newline\newline
+                    	{- dépend généralement de métriques de dissimilarité et de similarité}
+                    	&
+                    	{  permettrait de construire un réseau moléculaire unifié compte tenu des données RMN et HRMS d'origine}
+                    	\\
+                    	Algorithmes basées sur les réseaux
+                    	&
+                    	{- permet d'obtenir un réseau de similarité globale qui peut etre utile pour l'exploration des données} \newline\newline
+                    	{- permet de capturer globalement l'espace de chaque vue plus précisément, ainsi que les relations des données entre ces vues} \newline\newline
+                    	&
+                    	{- sensible aux bruits} \newline\newline
+                    	{- la "classification" d'une nouvelle observation nécessite un ré-apprentissage des paramètres} \newline\newline
+                    	&
+                    	{  pourrait permettre de construire un réseau moléculaire globale associant les réseaux moléculaires des données RMN et HRMS d'origine}
+                    	\\
+                    	\hline
+                    	Algorithmes spectraux
+                    	&
+                    	{ permet d'obtenir un indicateur unifié des clusters tout en calculant et intégrant les importances des vues dans la construction des clusters}
+                    	&
+                    	{- la "classification" d'une nouvelle observation nécessite un ré-apprentissage des paramètres} \newline\newline
+                    	{- dépend généralement de métriques de similarité spécifiques pour la construction des matrices de similarité, ce qui le rend instable } \newline\newline
+                    	{- se base uniquement sur les données des vues complètes}
+                    	&
+                    	{  pourrait permettre les importances des vues dans la construction du réseau moléculaire unifié et des clusters globaux }
+                    	\\
+                    	\hline
+                    	Algorithmes de sous-espaces
+                    	&
+                    	{- permet d'obtenir une représentation unifiée des données des vues tout en optimisant les regroupements, ce qui permet d'obtenir une matrice de similarité unifié } \newline\newline
+                    	{- peu sensible aux bruits des données d'origine}
+                    	&
+                    	{  généralement la "classification" d'une nouvelle observation nécessite un ré-apprentissage des paramètres}
+                    	&
+                    	{- pourrait permettre de calculer une représentation unifié des vues RMN et HRMS pour construire un réseau moléculaire unifié}
+                    	\\
+                	\hline
+            	\end{longtable}
+        	\end{center}
+
+
+    	\subsection{Jeu de données}
+        	Les auteurs au cours de leur enquête ont recensé un ensemble de bases de données d'entraînement multi-vues. Elles sont les suivantes :
+        	\begin{itemize}
+            	\item \href{http://mlg.ucd.ie/datasets/bbc.html}{3Sources Datasets}: est un dépôt qui contient des corpus de textes multi-vues d'articles de 3 journaux, des datasets multi-vues de Twitter et bien d'autres
+            	\item \href{ttp://www.cs.cmu.edu/afs/cs.cmu.edu/project/theo-20/www/data/}{WebKb Datasets} : ensemble de datasets contenant des données de pages web issues de différentes université
+            	\item \href{http://lig-membres.imag.fr/grimal/data.html}{Newsgroup Datasets}: est un dépôt contenant des datasets multi-vues tels que "Cora Dataset", Reuters Multilingual Dataset.
+            	\item \href{http://archive.ics.uci.edu/ml/datasets/Multiple+Features}{Handwritten Digit Dataset} cette dataset contient comme vues les différents types de caractéristiques qu'on peut extraire des images des chiffres
+            	\item \href{https://archive.ics.uci.edu/ml/datasets/One-hundred+plant+species+leaves+data+set}{100leaves Dataset} Ici on a des données multivues sur des feuilles de plantes.
+            	\item \href{https://archive.ics.uci.edu/ml/datasets/YouTube+Multiview+Video+Games+Dataset}{YouTube Video Dataset}: cette dataset contient différents types de caractéristiques de vidéos youtube
+            	\item \href{http://lms.comp.nus.edu.sg/research/NUS-WIDE.htm}{NUS-WIDE Dataset} est une dataset d'images avec pour vues 6 caractéristiques de faible niveau de ces images
+        	\end{itemize}
+
+	\section{Article2: Representation Learning in Multi-view Clustering : A Literature Review}
+    
+    	\subsection{Description de l'article}
+        	L'article \textbf{Representation Learning in Multi view Clustering: A Literature Review} \cite{chen2022representation} est le résultat d'une enquête menée plus récente que celle de l'article \cite{yang2018multi}, sur les algorithmes de clustering multi-vues fait par les chercheurs Man-Sheng Chen, Jia-Qi Lin et al. Dans cet article, les auteurs présentent une typologie des algorithmes de clustering multi-vues basée sur l'apprentissage de représentation et les récentes directions de recherche sur le sujet du clustering multi-vues. on as les informations suivantes sur l’article:
+        	\begin{itemize}
+            	\item \textbf{Titre}: Representation learning in multi-view clustering: A literature review
+            	\item \textbf{Auteurs}:  Man-Sheng Chen, Jia-Qi Lin , Xiang-Long Li, Bao-Yu Liu, Chang-Dong Wang, Jian-Huang Lai, Dong Huang
+            	\item \textbf{Année de publication}: 2022
+            	\item \textbf{Journal}: Data Science and Engineering
+        	\end{itemize}
+   	 
+    	\subsection{Intuition et Architecture des algorithmes sans apprentissage de représentation}
+        	\subsubsection{Algorithmes de co-formation}
+        	Dans cette catégorie d'algorithme, l'intuition est de maximiser l'accord (consensus) entre les vues en améliorant les clusters itérativement allant de vues en vues.
+        	Au départ on construit les clusters pour chaque vue, et ensuite itérativement ces clusters sont améliorés en utilisant ceux d'autres vues jusqu'à convergence du consensus entre les vues.
+        	La figure \ref{fig:co-train1} illustre assez bien l'architecture. On construit des clusters pour chacune des vues 1 et 2 après entraînement, à la suite on améliore les clusters d'une vue,
+        	en utilisant des connaissances de l'autre dans le but de maximiser la cohésion entre les vues.
+       	 
+        	\subsubsection{Algorithmes multi-noyaux}
+        	Dans cette catégorie d'algorithme, l'idée est de projeter les données dans un espace de plus grande dimension (sans le calculer), commun aux vues pour construire de
+        	meilleurs regroupements.
+        	Cela est fait en construisant une fonction noyau unifiée en optimisation une métrique de clustering modifié tel que l'inertie intra-classe utilisé dans l'algorithme KMEANS.
+        	Généralement cette fonction est obtenue par fusion de noyau pour chacune des vues comme on peut le voir sur l'architecture présente sur la figure \ref{fig:multi-kernel1}.
+       	 
+
+        	\subsubsection{Algorithmes spectraux}
+        	Effectuer du clustering revient à trouver k groupes d'observations similaires entre eux.
+        	Cela se fait par une fonction $f$ qui permet d'attribuer à chaque observation un indicateur propre à un des $K$ clusters.
+        	L'idée est de construire cet indicateur unifié (qui est une matrice) aux vues en s'appuyant sur leurs importances dans la construction des clusters.
+        	Les regroupements effectués se basent sur l'algorithme de clustering spectral standard, car permet d'évaluer et optimiser le clustering sur une vue, compte tenu un indicateur et la matrice de similarité des observations. La figure \ref{fig:spectr} présente bien l'architecture.
+
+        	\subsubsection{Algorithmes de factorisation matricielle}
+        	L'idée ici est de construire un indicateur unifié des clusters en combinant les indicateurs des vues obtenus par factorisation des données.
+        	Généralement la fusion de ces indicateurs se fait en optimisant une fonction de consensus des vues.
+        	Cela est bien présenté dans la figure \ref{fig:fact} qui contient à l'architecture globale de ces algorithmes.
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width =\linewidth]{Images/factorisation.png}
+            	\caption{Processus des algorithmes de factorisation matricielle}
+            	\label{fig:fact}
+        	\end{figure}
+           	 
+    	\subsection{Intuition et Architecture des algorithmes basés sur l'apprentissage de représentation}
+       	 
+        	\subsubsection{Algorithmes basés sur les graphes}
+            	Dans cette catégorie d'algorithme, l'idée est de construire un graphe de similarité unifié en fusionnant les graphes d'observations de chacune des vues dans le but d'optimiser des regroupements, tel que présenté à la figure \ref{fig:graph2}.
+            	Généralement on définit une fonction objective de fusion (de consensus) des matrices de similarité des vues, qui après optimisation permet d'obtenir une matrice de similarité unifié.
+            	Ce graphe unifié sera par la suite sujet de classification spectrale standard.
+    
+            	\begin{figure}
+                	\centering
+                	\includegraphics[width=\linewidth]{Images/graph2.png}
+                	\caption{Processus général des algorithmes basés sur les graphes \cite{chen2022representation}}
+                	\label{fig:graph2}
+            	\end{figure}
+    
+        	\subsubsection{Algorithmes de sous-espaces}
+            	L'idée ici est de rechercher une représentation unifiée des vues intégrant le consensus entre eux, pour ensuite y effectuer un algorithme de clustering à une vue unique.
+            	Cela se fait soit directement sur les données des vues, soit dans un espace latent appris, tel que sur la figure \ref{fig:subspace} qui présente l'architecture générale.
+           	 
+    
+        	\subsubsection{Algorithmes basés sur l'apprentissage profond de représentation}
+            	L'idée est de construire la représentation unifiée en utilisant un réseau de neurones compte tenu des données des vues.
+            	On met à jour les paramètres du réseau par rapport aux "erreurs" qu'on obtient des regroupements.
+            	Cette erreur est généralement une fonction objective à optimiser, quantifiant la qualité du clustering pour chacune des vues en utilisant les paramètres.
+            	La figure \ref{fig:deepLearning} présentent très clairement l'architecture.
+           	 
+            	\begin{figure}
+                	\centering
+                	\includegraphics[width = \linewidth]{Images/subspace.png}
+                	\caption{Processus général des algorithmes d'apprentissage profond de représentation \cite{chen2022representation}}
+                	\label{fig:deepLearning}
+            	\end{figure}
+
+    	\subsection{Avantages, limites et apport dans le mémoire}
+        	Dans le tableau qui suit, nous avons essayé de recenser les avantages et limites de chaque approche présentée
+
+        	\begin{center}
+            	\begin{longtable}{|p{2.5cm}|p{4.5cm}|p{4.5cm}|p{3cm}|} \hline
+                	~ & {Avantages} & {Limites} \\
+                    	\hline
+                    	Algorithmes de co-formation
+                    	&
+                    	{- améliore itérativement et simultanément les clusters de chaque vue} \newline\newline
+                    	{- permet d’obtenir des regroupements ”optimaux” dans chacune des vues}
+                    	&
+                    	{- reconstruit les clusters à chaque étape, ce qui peut alourdir le temps de calcul des clusters optimaux}
+                    	\\
+                    	\hline
+                    	Algorithmes multi-noyaux
+                    	&
+                    	{- permet d'obtenir des clusters globaux dans un espace unifié de plus grande dimension (sans l'obtenir analytiquement) permettant d'obtenir les meilleurs regroupements } \newline\newline
+                    	{- permet de mettre une nouvelle observation dans un cluster sans pour autant relancer tout le processus} \newline\newline
+                    	{- peu sensible aux bruits} \newline\newline
+                    	{- permet d’obtenir des poids que nous qualifions d'importance des vues par rapport aux observations dans la construction des clusters}
+                    	&
+                    	{- on ne peut pas obtenir l'espace de plus grande dimension cible} \newline\newline
+                    	{- dépend fortement du choix de la fonction noyau unifiée (de la fusion des noyaux de chaque vue)}
+                    	\\
+                    	\hline
+                    	Algorithmes spectraux
+                    	&
+                    	{- permet d'obtenir un indicateur unifié des clusters tout en calculant et intégrant les importances des vues dans la construction des clusters}
+                    	&
+                    	{- l'attribution d'une nouvelle observation à un cluster nécessite un ré-apprentissage des paramètres} \newline\newline
+                        {- sensible aux bruits} \newline\newline
+                    	{- dépend généralement de métriques de similarité spécifiques pour la construction des matrices de similarité, ce qui le rend instable } \newline\newline
+                    	{- se base uniquement sur les données des vues complètes}
+                    	\\
+                    	\hline
+                    	Algorithmes de factorisation
+                    	&
+                    	{- permet d'obtenir un indicateur unifié des clusters et des indicateurs spécifiques pour chacune des vues, tout en évaluant l'importance de ces vues dans les regroupements} \newline\newline
+                    	&
+                    	{- l'attribution d'une nouvelle observation à un cluster nécessite un ré-apprentissage des paramètres}
+                    	\\
+                    	\hline
+                    	Algorithmes basées sur les graphes
+                    	&
+                    	{- permet d'obtenir un graphe de similarité globale utile à l'exploration des données} \newline\newline
+                    	{- peu sensible aux bruits} \newline\newline
+                    	{- permet de reduire la dimentionalité des données de chaques vues}
+                    	&
+                    	{- l'attribution d'une nouvelle observation à un cluster nécessite un ré-apprentissage des paramètres} \newline\newline
+                    	{- dépend généralement de métriques de dissimilarité et de similarité}
+                    	\\
+                    	\hline
+                    	Algorithmes de sous-espaces
+                    	&
+                    	{- permet d'obtenir une représentation globale des vues tout en optimisant les regroupements } \newline\newline
+                        {- permet d'obtenir une matrice d'adjace } \newline\newline
+                        {- permet de réduire la dimentionalité des données d'origine } \newline\newline
+                    	{- peu sensible aux bruits}
+                    	&
+                    	{- l'attribution d'une nouvelle observation à un cluster nécessite un ré-apprentissage des paramètres}
+                    	\\
+                    	\hline
+                    	Algorithmes basés sur l'apprentissage profond de représentation
+                    	&
+                    	{- permet d'obtenir une représentation unifiée des vues } \newline\newline
+                    	{- la "classification" d'une nouvelle observation ne nécessite pas forcément un ré-apprentissage des paramètres}
+                    	&
+                    	{- on a le problème d'explicabilité du réseau}
+                    	&
+                    	{- pourrait permettre de construire le réseau moléculaire unifié et des clusters globaux des données HRMS et RMN}
+                    	\\
+                	\hline
+            	\end{longtable}
+        	\end{center}
+
+    	\subsection{Jeu de données}
+        	Les auteurs au cours de leur enquête, ont recensé un ensemble de bases de données d'entraînement multi-vues, dont ils ont partagé les références. Elles sont :
+        	\begin{itemize}
+            	\item \href{http://mlg.ucd.ie/datasets/segment.html}{BBC4view}: contenant des actualités présentés par la BBC.
+            	\item \href{http://cvc.yale.edu/projects/yalefaces/yalefaces.html}{Yale}:  contenant des images de visages avec différents types de caractéristiques extraites de ces dernières
+            	\item \href{http://mlg.ucd.ie/datasets/bbc.html}{3Sources Datasets}: est un dépôt qui contient des corpus de textes multivues d'articles de 3 journaux, des datasets multivues de Twitter et bien d'autres
+            	\item \href{http://www.vision.caltech.edu/Image_Datasets/Caltech101}{Caltech101}
+            	\item \href{http://mlg.ucd.ie/datasets/segment.html}{BBC4view et BBCSport}
+            	\item \href{http://mlg.ucd.ie/datasets/3sources.html}{3Sources}
+        	\end{itemize}
+   	 
+    	\subsection{Disponibilité du code source}
+        	Les auteurs ont recensé des liens de code source de certains algorithmes spécifiés.
+        	On peut voir un certain nombre dans le tableau suivant :
+        	\begin{center}
+            	\begin{longtable}{|p{3cm}|p{2cm}|p{9.5cm}|}
+            	\hline
+            	{Catégorie} & {Algorithme} & {Liens de code source} \\
+            	\hline
+                	Non-representation & Co-train & \href{http://www.abhishek.umiacs.io/code_cospectral.zip}{http://www.abhishek.umiacs.io/code_cospectral.zip}\\
+                	& Co-reg &  \href{http://www.abhishek.umiacs.io/code_coregspectral.zip}{http://www.abhishek.umiacs.io/code_coregspectral.zip}\\
+                	Representation & MCLES & \href{https://github.com/ManshengChen/MCLES}{https://github.com/ManshengChen/MCLES}\\
+                	& MVGL & \href{https://github.com/kunzhan/MVGL}{https://github.com/kunzhan/MVGL}
+            	\hline
+        	\end{longtable}
+        	\end{center}
+       	 
+	\section{Article3: Multi-view Clustering}
+    	\subsection{Description de l'article}
+        	L'article \textbf{Multi-view Clustering} \cite{bickel2004multi} est le résultat de recherche des auteurs \textbf{teffen Bickel} et \textbf{Tobias Scheffer}, visant à trouver des versions d'algorithmes multivues de co-formation pour les algorithmes KMEANS, EM(Expectation Maximum) et CAH(Classification Ascendante Hierachique) en utilisant des données textuelles possédant deux vues indépendantes.
+        	Dans le but d'évaluer les modèles et d'effectuer des analyses sur ces dernières, les auteurs ont choisi les métriques tels que le logarithme de vraisemblance (pour l’algorithme EM spécialement) et l'entropie moyenne.
+   	 
+       	\begin{itemize}
+           	\item \textbf{Titre}: Multi-view Clustering
+           	\item \textbf{Auteurs}: \textbf{teffen Bickel} et \textbf{Tobias Scheffer}
+           	\item \textbf{Année de publication}: 2004
+           	\item \textbf{Journal}: ICDM
+       	\end{itemize}
+   	 
+   	\subsection{Intuition et architecture}
+        	Comme décrit dans la description, l'idée est de construire des versions des algorithmes KMEANS, EM et CAH pour des données textuelles à deux vues.
+        	Cela en s'inspirant des algorithmes de co-formation.
+
+        	\subsubsection{Algorithme de clustering multi-vues EM}
+            	Pour mieux visualiser l'architecture de l'algorithme \ref{alg:em-mg}, il suffit de regarder la figure \ref{fig:co-train1} qui permet de distinguer ses étapes.
+            	La phase de "Expectation" correspond pour chacune des vues à la phase de calcul des probabilités d'appartenance aux clusters, et la phase "Maximisation" pour chaque vue correspond à
+            	la phase de maximisation de la vraisemblance compte tenu des probabilités d'appartenance de l'autre vue.
+            	\begin{algorithm}[H]
+                	\caption{Pseudo code de l'algorithme multi-vues EM \cite{bickel2004multi}}
+                	\label{alg:em-mg}
+                	\begin{algorithmic}[1]
+                 	\REQUIRE Données d'entrée $X$ = $\{ (x_{1}^{(1)}, x_{1}^{(1)}), (x_{2}^{(1)}, x_{2}^{(1)}), ..., (x_{n}^{(1)}, x_{n}^{(1)}) \}$
+                 	\STATE Initialiser $\Theta_{0}^{(2)}$, $t=0$
+                 	\STATE \textbf{(E)} pour la vue 2 : calcul des variables cachées liées aux paramètres $\Theta_{0}^{(2)}$
+                 	\WHILE{critère d'arrêt n'est pas satisfait}
+  	 
+                   	\FOR{$v$ allant de 1 à 2}
+                       	\STATE $t = t+1$
+                       	\STATE \textbf{(M)} pour la vue $v$ : Calcul des paramètres $\Theta_{t}^{(v)}$ en fonction des variables cachées de la vue complémentaire $\Bar{v}$
+                       	\STATE \textbf{(E)} pour la vue $v$ : Calcul des variables cachées des paramètres $\Theta_{t}^{(v)}$
+                   	\ENDFOR
+                   	 
+                 	\ENDWHILE
+                 	\STATE return $\hat{\Theta} = \Theta_{t-1}^{(1)} \cup \Theta_{t}^{(2)}$
+                	\end{algorithmic}
+           	\end{algorithm}
+       	 
+        	\subsubsection{Algorithme de clustering multi-vues KMEANS sphérique}
+            	Comme pour le précédent algorithme, cet algorithme \ref{alg:em-mg} s'appuie sur le schéma standard des algorithmes de co-formation, mais ajoute une étape après convergence pour construire
+            	des clusters globales et non spécifiques.
+            	Ici au lieu de calculer les probabilités d'appartenance, on calcule les clusters, et au lieu de calculer les paramètres qui optimisent la vraisemblance, on calcule les centres des clusters.
+            	\begin{algorithm}[H]
+                	\caption{Pseudo code de l'algorithme multi-vues KMEANS sphérique}
+                	\label{alg:em-mg}
+                	\begin{algorithmic}[1]
+                 	\REQUIRE Données d'entrée $X$ = $\{ (x_{1}^{(1)}, x_{1}^{(1)}), (x_{2}^{(1)}, x_{2}^{(1)}), ..., (x_{n}^{(1)}, x_{n}^{(1)}) \}$
+                 	\STATE Initialiser les centres $C_{k}^{(2)}$
+                 	\STATE \textbf{(E)} pour la vue 2 : calcul des partitions $\pi_{k}^{(2)}$
+                 	\WHILE{critère d'arrêt n'est pas satisfait}
+                   	\FOR{$v$ allant de 1 à 2}
+                       	\STATE \textbf{(M)} pour la vue $v$ : $\pi_{k}^{(v)}$ = $\pi_{k}^{(\Bar{v})}$, Calcul des centres $C_{k}^{(v)}$
+                       	\STATE \textbf{(E)} pour la vue $v$ : Calcul des partitions $\pi_{k}^{(v)}$
+                   	\ENDFOR
+                 	\ENDWHILE
+                 	\STATE calcul des centres globales $m_k$ et des partitions globales $\pi_k$
+                	\end{algorithmic}
+           	\end{algorithm}
+
+        	\subsubsection{Algorithme de clustering multi-vues CAH}
+            	Comme pour le précédent algorithme, cet algorithme \ref{alg:cah-ms1} s'appuie sur le schéma standard des algorithmes de co-formation.
+            	L'idée est de construire allant de vue en vue un dendrogramme global en s'appuyant à chaque étape sur les clusters les plus proches de chaque vue.
+            	\begin{algorithm}[H]
+                	\caption{Pseudo code de l'algorithme multi-vues CAH \cite{bickel2004multi}}
+                	\label{alg:cah-ms1}
+                	\begin{algorithmic}[1]
+                	\REQUIRE Données d'entrée $X$ = $\{ (x_{1}^{(1)}, x_{1}^{(1)}), (x_{2}^{(1)}, x_{2}^{(1)}), ..., (x_{n}^{(1)}, x_{n}^{(1)}) \}$, les mesures de distances entre clusters pour chacune des vues $d^1(C_i,C_j)$ et $d^2(C_i,C_j)$
+                	\STATE Initialiser les clusters $C_i = x_i$
+                	\FOR{$t$ allant de 1 à n}
+                    	\FOR{$v$ allant de 1 à 2}
+                        	\STATE rechercher le couple de cluster $(C_i, C_j)= \text{argmin}_{C_i,C_j} d^v(C_i, C_j)$ pour $i,j = 1...(n-t+1)$
+                        	\STATE Fusionner les clusters $C_i$ et $C_j$ sur le dendrogramme commun aux deux vues
+                    	\ENDFOR
+                	\ENDFOR
+                	\STATE retourner le dendrograme commun aux deux vues
+                	\end{algorithmic}
+            	\end{algorithm}
+       	 
+    	\subsection{Avantages, limites et apport dans le mémoire}
+        	Dans le tableau qui suit, nous avons essayé de recenser les avantages et limites de chaque approche présentée
+        	\begin{center}
+            	\begin{longtable}{|p{2.5cm}|p{4.5cm}|p{4.5cm}|p{3cm}|} \hline
+                	~ & {Avantages} & {Limites} & {Apport dans le mémoire} \\
+                    	\hline
+                    	Algorithme de clustering multi-vues EM
+                    	&
+                    	{\textbf{-} il améliore itérativement et simultanément les clusters de chaque vue} \newline\newline
+                    	{\textbf{-} il permet d'obtenir des regroupements "optimaux" dans chacunes des vues} \newline\newline
+                    	{\textbf{-} il est peu sensible aux bruits du fait de l'utilisation des probabilités et non des données d'origine des vues} \newline\newline
+                    	{\textbf{-} permet d'affecter une observation dans un cluster sans nécessité un ré-entraînement du modèle, ce qui le rend flexible}
+                    	&
+                    	{\textbf{-} on a au final des clusters spécifiques à chacune des vues, ce qui pose le problème de choisir des clusters d'une vue spécifique} \newline\newline
+                    	{\textbf{-} il n'assure pas forcément la convergence de la maximisation de la vraisemblance} \newline\newline
+                    	{\textbf{-} on a au final des clusters spécifiques à chacune des vues, ce qui pose le problème de choisir des clusters d'une vue spécifique} \newline\newline
+                    	{\textbf{-} on reconstruit les clusters à chaque étape, ce qui peut alourdir le temps de calcul des clusters optimaux}
+                    	&
+                    	{\textbf{-} pourrait être utile dans la mesure où on voudrait construire des regroupements optimaux de spectres selon les données RMN et HRMS séparément en utilisant l'accord entre eux} \newline\newline
+                    	{\textbf{-} ne peut pas nous être utile pour construire un réseau moléculaire unifié }
+                    	\\
+                    	\hline
+                    	Algorithme CAH
+                    	&
+                    	{\textbf{-} permet d'obtenir des regroupements hiérarchiques des observations, ce qui nous permet de ne pas forcément définir le nombre de clusters à construire}
+                    	&
+                    	{\textbf{-} ne permet d'affecter une observation dans un cluster sans nécessité un ré-entraînement du modèle} \newline\newline
+                    	{\textbf{-} il n'assure pas la construction de bons clusters} \newline\newline
+                    	{\textbf{-} plus sensible aux bruits issus des données de vues d'origine} \newline\newline
+                    	{\textbf{-} dépend des métriques de dissimilarité entre les clusters pour chacune des vues } \newline\newline
+                    	{\textbf{-} dépend de la fusion des clusters les plus proches sur le dendrogramme globale à chaque étape }
+                    	&
+                    	{\textbf{-} pourrait être utile pour construire des familles de spectres en utilisant les données HRMS et RMN simultanément }
+                    	\\
+                    	\hline
+                    	Algorithme KMEANS sphérique
+                    	&
+                    	{\textbf{-} il améliore itérativement et simultanément les clusters de chaque vue} \newline\newline
+                    	{\textbf{-} il permet d'obtenir des regroupements "optimaux" globalement et dans chacune des vues} \newline \newline
+                    	{\textbf{-} permet d'affecter une observation dans un cluster sans nécessité un ré-entraînement du modèle, ce qui le rend flexible}
+                    	&
+                    	{\textbf{-} il n'assure pas forcément la convergence de la maximisation de la vraisemblance si on utilise des données outre que textuelle} \newline\newline
+                    	{\textbf{-} on plus sensible aux bruits issus des données de vues d'origine} \newline\newline
+                    	{\textbf{-} dépend d'une métrique de similarité unique qui est le cosinus de similarité, ce qui ne peut pas forcément convenir à des données non éparses} \newline\newline
+                    	{\textbf{-} on reconstruit les clusters à chaque étape, ce qui peut alourdir le temps de calcul des clusters optimaux}
+                    	&
+                    	{\textbf{-} pourrait être utile pour construire des familles de spectres en utilisant les données HRMS et RMN simultanément} \newline\newline
+                    	{\textbf{-} ne peut pas nous être utile pour construire un réseau moléculaire unifié }
+                    	\\
+                	\hline
+            	\end{longtable}
+        	\end{center}
+
+    	\subsection{Jeu de données}
+        	La dataset utilisée pour évaluer les algorithmes est la dataset \href{ttp://www.cs.cmu.edu/afs/cs.cmu.edu/project/theo-20/www/data/}{WebKb}
+
+        \subsection{Resultats}
+    	La métrique utilisée pour évaluer tous les algorithmes est l'entropie moyenne donnée par l'équation \ref{equa:entopie_1} dans le cas où on a model de mélange. On a $p_{kk'}$ est la proportion du modèle de mélange $k'$ dans le cluster $k$ et $n_k$ le nombre d'observations du cluster $k$. Dans les cas contraire, nous pensons qu'une conversion des modèles en question devront être fait en modèle de mélange.
+ 
+        \begin{equation}
+            \begin{aligned}
+                E = \sum_k  \frac{ n_k }{ n } \times ( - \sum_{k'} p_{kk'}\log(p_{kk'}))
+            \end{aligned}
+            \label{equa:entopie_1} 
+        \end{equation}
+ 
+        Pour l'algorithme EM plus spécifiquement le logarithme de vraisemblance a été également utilisé. On a:
+        \begin{itemize}
+            \item la figure \ref{fig:em-m1} qui montre que l'algorithme à 2 vues de EM minimise plus rapidement et bien mieux les erreurs d'affections des observations ainsi que la quantité de désordre présent dans les clusters
+        	\item la figure \ref{fig:em-m2} qui montre que la version à 2 vues maximise moins rapidement et moins mieux le logarithme de vraisemblance que celle à une vue, par contre si on poursuit sur le clustering obtenu sur une des vues avec l'algorithme EM à une vue, on atteint une meilleure maximisation du logarithme.
+        \end{itemize}
+        
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{Images/evaluateMultiviewEM.png}
+            \caption{Entropie pour la version à 1 vue et 2 vues de l'algorithme EM (à gauche) et KMEANS sphérique (à droite) \cite{bickel2004multi} }
+            \label{fig:em-m1}
+        \end{figure}
+        
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{Images/evaluateMultiviewEM2.png}
+            \caption{Logarithme de vraisemblance pour la version à 1 vue et 2 vues de l'algorithme EM \cite{bickel2004multi}}
+            \label{fig:em-m2}
+        \end{figure}
+        
+        La figure d'évaluation \ref{fig:em-m1} montre que l'algorithme à 2 vues de KMEANS sphérique, minimise plus rapidement le désordre présent dans les clusters comparé à l'algorithme à une vue. Malheureusement pour l'algorithme à deux de CAH sur la figure \ref{fig:cah-m1}, on perçoit que quelque soit le nombre de clusters $K$ choisi, on obtient moins de désordre en utilisant la version de l'algorithme à une vue qu'en utilisant celui à deux. Cela peut être causé par le moyen de fusion des clusters. 
+    
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{Images/evaluateMultiviewEM2.png}
+            \caption{Entropies pour la version à 1 vue et 2 vues de l'algorithme CAH \cite{bickel2004multi}}
+            \label{fig:cah-m1}
+        \end{figure}
+    
+
+	\section{Article 4: Multiview Clustering Latent Embedding Space}
+    	\subsection{Description de l'article}
+        	L'article \textbf{Multiview Clustering Latent Embedding Space} \cite{mcles} est né du besoin de réduire l'influence de la qualité de la donnée multivue d'entrée pour améliorer la qualité les regroupements. Les auteurs proposent d'apprendre une représentation unifiée des données dans un espace intermédiaire (latent) réduisant ainsi l'influence de la qualité d'origine. Comme informations liées à l'article nous avons:
+       	 
+       	\begin{itemize}
+           	\item \textbf{Titre}: Multiview Clustering Latent Embedding Space
+           	\item \textbf{Auteurs}: Man Sheng et al.
+           	\item \textbf{Année de publication}: 2020
+           	\item \textbf{Journal}: Proceedings of the AAAI Conference on Artificial Intelligence
+       	\end{itemize}
+
+    	\subsection{Intuition et architecture}
+        	L'idée est de construire les indicateurs de clusters sur la base des représentations unifiées des observations dans l'espace latent.
+        	Cela en optimisant conjointement les paramètres d'obtention de l'espace latent, les représentations unifiées, la matrice de similarité unifiée entre les observations et les indicateurs de clusters.
+       	 
+        	La figure \ref{fig:mlces} présente globalement les étapes de la méthode, on calcule par optimisation les matrices d'obtention de l'espace latent, puis la matrice de représentations unifiées, puis la "matrice de similarité" unifié et enfin les indicateurs de clusters.
+        	On refera ces étapes tant qu'il n'y a pas convergence de la fonction évaluant l'utilisation des paramètres donnés pour le regroupement.
+        	\begin{figure}
+            	\centering
+            	\includegraphics[width = \linewidth]{Images/MCLES_process.png}
+            	\caption{Processus de l'algorithme MCLES}
+            	\label{fig:mlces}
+        	\end{figure}
+       	 
+    	\subsection{Avantages, limites et apport dans le mémoire}
+        	Dans le tableau qui suit, nous avons essayé de recenser les avantages et limites de l'approche présentée
+        	\begin{center}
+            	\begin{longtable}{|p{5cm}|p{5cm}|p{4.5cm}|} \hline
+                	{Avantages} & {Limites} & {Apport dans le mémoire} \\
+                	\hline
+                    	{\textbf{-} permet d'obtenir un espace latent et une représentation unifiée compte tenu un ensemble d'observations pour chacune des vues} \newline\newline
+                    	{\textbf{-} permet d'obtenir une matrice de similarité unifiée visant à optimiser les regroupements} \newline\newline
+                    	{\textbf{-} très peu sensible aux bruits, du fait de l'utilisation de la représentation unifiée et non de l'espace d'origine} \newline\newline
+                    	{\textbf{-} permet de prendre en compte efficacement du clustering dans la construction de l'espace latent, de la représentation unifiée et dans la matrice de similarité}
+                    	&
+                    	{\textbf{-} pour mettre une nouvelle observation dans un cluster, on a obligatoirement besoin de relancer l'entraînement qui a un coût non négligeable } \newline\newline
+                    	{\textbf{-} l'entraînement ne s'applique que sur des données de vues complètes} \newline\newline
+                    	{\textbf{-} la matrice de similarité obtenu n'est pas tout à fait correct à cause du fait que la matrice n'est pas forcément symétrique} \newline\newline
+                    	{\textbf{-} on accorde la même importance à chacune des vues pour les regroupements} \newline\newline
+                    	{\textbf{-} ne tient pas compte des importances que les vues peuvent avoir dans les regroupements } \newline\newline
+                    	{\textbf{-} il n'est pas forcément possible de réutiliser l'espace latent obtenu pour construire la représentation unifié pour une nouvelle observation, car rien ne prouve que pour chacune des vues les représentations unifiées obtenues de cette observation soient les mêmes}
+                    	&
+                    	{\textbf{-} afin de construire un réseau moléculaire unifié, on pourrait exploiter la matrice de similarité obtenu après entraînement tout s'assurant qu'il correspond aux conditions indiquées par définition}\newline\newline
+                    	{\textbf{-} on pourrait également au lieu de calculer la matrice de similarité, construire une métrique de similarité à la place pour exploiter la représentation unifiée obtenue }\newline\newline
+                    	{\textbf{-} on pourrait construire la représentation unifiée (en s'inspirant de leur procédé) en tenant compte de l'importance de chacunes des vues tout en s'assurant qu'après entraînement on puisse exploiter l'espace latent obtenu}
+                	\\
+                	\hline
+            	\end{longtable}
+        	\end{center}
+
+    	\subsection{Jeu de données}
+        	Pour évaluer les performances du modèle les auteurs, ont utilisés les datasets suivantes :
+        	\begin{itemize}
+            	\item Yale (\href{http://cvc.yale.edu/projects/yalefaces/yalefaces.html}{http://cvc.yale.edu/projects/yalefaces/yalefaces.html}): une dataset d'image de visages
+            	\item MSRCv1 : une dataset d'images d'objets
+            	\item ORL (\href{http://www.cl.cam.ac.uk/research/dtg/}{http://www.cl.cam.ac.uk/research/dtg}): une dataset d'image
+            	\item BBCSport : une dataset d'articles
+        	\end{itemize}
+
+         \subsection{Résultats}
+            Pour évaluer le modèle, les auteurs ont choisi comme métrique l'exactitude, l'information mutuelle normalisé et de pureté; comme dataset d'évaluation Yale, MSRCv1, ORL et BBCSport, et ont exécuté l'algorithme proposé et les algorithmes les plus performants de l'état de l'art 20 fois sur ces datasets. Les résultats des auteurs sont assez impressionnants et démontrent que l'algorithme proposé par les auteurs est plus performant dans l'ensemble. Il faut aussi noter que la vitesse de convergence sur ces datasets est relativement grande telqu'on peut le voir sur la figure \ref{fig:mlces2}.
+
+            \begin{figure}
+                    \centering
+                    \includegraphics[width=\linewidth]{Images/mlces_convergence.png}
+                    \caption{Convergence du logarithme de la fonction objective de l'algorithme MLCES \cite{mcles}}
+                    \label{fig:mlces2}
+                \end{figure}
+           	 
+    	\subsection{Disponibilité du code source}
+        	Les auteurs ont rendus publique le code source du model écrit en matlab au lien github \href{https://github.com/ManshengChen/MCLES}{https://github.com/ManshengChen/MCLES}.
+    
+	\section{Conclusion}
+    	En somme, il était question pour nous de faire un résumé global de nos lectures sur les articles présentés, dans le but d'avoir une vision claire des algorithmes y contenus, afin d'avoir des pistes pour établir la méthode résolvant notre problème de mémoire. Nous pensons que l'algorithme MLCES est une bonne base pour la construction de clusters unifiés, d'un réseau moléculaire unifié et d'une représentation unifiée des spectres HRMS et RMN. On pourrait introduire l'importance des vues dans les factorisations, apprendre une fonction de similarité pour la représentation unifiée un peu comme la fonction d'attention du modèle GAT de référence \cite{velivckovic2017graph} dans le but de rendre l'algorithme MLCES plus flexible et plus efficace.
+   	
+
+\bibliographystyle{plain}
+	\bibliography{reference_GNPS_MADByTE}
+\end{document}
+
+
+

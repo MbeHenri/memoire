@@ -1,0 +1,173 @@
+\documentclass[memoir, 12pt]{report}
+
+\usepackage[top = 2cm, bottom = 1.5cm, left = 2cm, right = 2cm]{geometry}
+\usepackage{enumitem}
+%\\usepackage{mathtools}
+% \usepackage[linesnumbered,ruled,french]{algorithm2e}
+
+%\usepackage[linesnumbered, french]{algorithm2e}
+%\usepackage{algorithm2e}
+
+%\usepackage{multibib}
+%\newcites{biblio}{Bibliographie}
+%\newcites{other}{Autres r\'ef\'erences}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{lmodern}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[babel=true]{csquotes}
+\setlength{\fboxrule}{0.01cm}
+\setlength{\fboxsep}{0.5cm}
+\usepackage{tikz}
+\usepackage{lipsum}
+\usepackage{setspace}
+\usepackage{ragged2e}
+\usepackage{url}
+\usepackage{float}
+%\usepackage[thinlines]{easytable}
+\usepackage{hyperref}
+\usepackage[export]{adjustbox}
+\usepackage{tabularx}
+\newcolumntype{b}{X}
+\newcolumntype{s}{>{\hsize=.5\hsize}X}
+\usepackage{multicol}
+%\\usepackage{tabto}
+\usepackage{multirow}
+\usepackage{colortbl}
+
+% Keywords command
+\providecommand{\keywords}[2]
+{
+  \vspace{1.2cm}
+  \textbf{{#1 :}} #2
+}
+
+\graphicspath{{figures/}}
+
+%\usepackage{algpseudocode}
+%\usepackage[french]{algorithmic}
+%\usepackage{algorithmic}
+%\usepackage[algcompatible]{algpseudocode}
+%\algrenewcommand\alglinenumber[1]{\footnotesize #1}
+%\usepackage[table,xcdraw]{xcolor}
+\usepackage[normalem]{ulem}
+\useunder{\uline}{\ul}{}
+\usepackage[french]{babel}
+\frenchbsetup{StandardLists=true}
+
+\usepackage{amssymb} 
+\usepackage{dsfont}
+
+\usepackage{algorithm}
+\usepackage[french]{algorithmic}
+\renewcommand{\listalgorithmname}{Liste des algorithmes}
+\floatname{algorithm}{Algorithme}
+\renewcommand{\algorithmicreturn}{\textbf{retourner}}
+\renewcommand{\algorithmicprocedure}{\textbf{procédure}}
+\renewcommand{\Not}{\textbf{non}\ }
+\renewcommand{\And}{\textbf{et}\ }
+\renewcommand{\Or}{\textbf{ou}\ }
+\renewcommand{\algorithmicrequire}{\textbf{Entrée:}}
+\renewcommand{\algorithmicensure}{\textbf{Sortie:}}
+%\renewcommand{\algorithmiccomment}[1]{\{#1\}}
+\renewcommand{\algorithmicend}{\textbf{fin}}
+\renewcommand{\algorithmicif}{\textbf{si}}
+\renewcommand{\algorithmicthen}{\textbf{alors}}
+\renewcommand{\algorithmicrepeat}{\textbf{repéter}}
+\renewcommand{\algorithmicuntil}{\textbf{tantque}}
+\renewcommand{\algorithmicelse}{\textbf{sinon}}
+\renewcommand{\algorithmicfor}{\textbf{pour}}
+\renewcommand{\algorithmicforall}{\textbf{pour tout}}
+\renewcommand{\algorithmicdo}{\textbf{faire}}
+\renewcommand{\algorithmicwhile}{\textbf{tant que}}
+\newcommand{\algorithmicelsif}{\algorithmicelse\ \algorithmicif}
+\newcommand{\algorithmicendif}{\algorithmicend\ \algorithmicif}
+\newcommand{\algorithmicendfor}{\algorithmicend\ \algorithmicfor}
+
+\usepackage{amsmath}
+\usepackage{longtable}
+
+
+
+\def\nbR{\ensuremath{\mathrm{I\! R}}}
+\DeclareMathAlphabet{\mathdsss}{U}{dsss}{m}{n}
+\newcommand{\mtpatchcmd}[7]{%
+	\expandafter\patchcmd\csname ps@#1\endcsname{\thepage}{}{}{}%
+	\expandafter\patchcmd\csname ps@#1\endcsname{\thepage}{}{}{}}
+
+\usepackage{booktabs}
+
+\usepackage[utf8]{inputenc}  
+\usepackage[T1]{fontenc} 
+%\usepackage{fancyhdr}
+\usepackage[Conny]{fncychap}
+%\usepackage[Bjornstrup]{fncychap}
+%Conny
+%Bjornstrup
+%\pagestyle{Conny}
+%\usepackage[french]{babel}
+%\renewcommand{\footrulewidth}{3pt}
+
+\usepackage[acronym]{glossaries}
+\makeglossaries
+\input{abreviations.tex}
+
+\begin{document}
+
+
+    \input{PageDeGarde1.tex}
+    \input{page_garde.tex}
+    
+    \newpage
+    \pagenumbering{roman}
+    
+    \setcounter{page}{1}
+    
+    \input{Dedicaces.tex}
+    \input{Remerciements.tex}
+    \input{Resume.tex}
+    \input{Abstract.tex}
+    
+    \tableofcontents
+    \listoffigures
+    
+    \newpage
+    \listoftables
+    
+    \newpage
+
+%\listofalgorithms
+%\renewcommand\listofalgorithms{LISTE DES ALGORITHMES}
+
+    \newpage
+    \include{liste_abreviation.tex}
+    
+    \newpage
+    \pagenumbering{arabic}
+    \setcounter{page}{1}
+
+    \input{introduction}
+    \input{Chapitre2}
+    \input{Chapitre3-4}
+    \input{ConclusionGenerale}
+    
+    \newpage
+    %\pagenumbering{roman}
+    \addcontentsline{toc}{chapter}{Bibliographie}
+    \include{biblographi.tex}
+
+%\newpage
+%\addcontentsline{toc}{chapter}{Autres références}
+%\bibliographystyleother{plain}
+%\bibliographyother{references/Bibliographie}
+
+
+%\newpage
+%\pagenumbering{roman}
+%\input{Annexe/Annexe}
+
+
+\end{document}

@@ -1,0 +1,311 @@
+\documentclass[12pt,a4paper]{report}
+\include{packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Alternating Direction Method of Multipliers}
+    {}
+	\tableofcontents
+	\vspace{20cm}
+    
+	\section{Introduction}
+	Dans le domaine du Machin Learning ou encore communément appelé apprentissage artificiel, il est question de construire des algorithmes capables de reproduire, prédire ou bien d'explorer des données issues des actions précises du monde réel.
+	Cette construction s'appuie communément sur un apprentissage de paramètres qui permettent le mieux possible de réaliser une tâche précise, ce qui conduit à l'optimisation de cette tâche sur la base de variables d'un ensemble donné.
+	C'est dans le but de résoudre de tel problème automatiquement que des algorithmes tel que la descente de gradient ont vu le jour. Dans la liste de ces algorithmes, nous retrouvons l'algorithme ADMM (Alternating Direction Method of Multipliers) qui sera sujet de ce document.
+	Nous présenterons l'algorithme de descente brièvement, ensuite l'algorithme ADMM et enfin un ensemble d'exemples d'utilisation de cet algorithme sur divers problèmes d'optimisation.
+    
+	\section{Algorithme de descente de gradient}
+    	Considérons le problème d'optimisation suivant où $f$ est une fonction objective
+    	\begin{equation}
+        	\min_{x} f(x)\
+        	\label{equa:opscc}
+    	\end{equation}
+   	 
+    	On souhaite trouver les variables $x^*$ qui permettent d'obtenir la valeur minimale $f^*$. L'idée derrière l'algorithme de descente de gradient pour résoudre automatiquement ce problème est de calculer itérativement les variables $x^*$ rendant optimale
+    	$f^*$.
+   	 
+    	Cela est fait en retrouvant la suite $x(n)$ tel que $x_{\infty} \rightarrow x^*$, avec l'expression de récurrence $x^{k+1} = x^k - s^k \bigtriangledown{f(x^k)}$ ($s^k > 0$), où $s^k$ est le pas de la direction de descente (pouvant être mis à jour) et $\bigtriangledown{f(x^k)}$ est le gradient de $f$ au point $x^k$ (qui est l'opposé de la direction de descente). on a donc l'algorithme suivant:
+    
+    	\begin{algorithm}[H]
+        	\caption{Descente de gradient}
+        	\label{alg:desgrad1}
+        	\begin{algorithmic}[1]
+        	\REQUIRE fonction $f$
+        	\STATE Initialiser $x_0$, $s_0$, $t=1$;
+        	\REPEAT
+        	\STATE $x^{t+1} = x^t - s^t \bigtriangledown{f(x^t)} $
+        	\STATE $t=t+1$
+        	\UNTIL{ convergence }
+        	\STATE retourner $x^t$
+        	\end{algorithmic}
+    	\end{algorithm}
+    
+    	Dans le cas où on a des contraintes sur les variables $x$ qui définissent un ensemble $\chi = \left\{x\ |\ h(x) = 0, g(x) <= 0 \right\}$, on définit une fonction de projection $P(x)$
+    	de $x$ sur $\chi$ pour qu'au cours des itérations on s'assure que les contraintes soient vérifiées.
+    	L'expression de récurrence devient dans ce cas $x^{k+1} = P\left( x^k - s^k \bigtriangledown f(x^k) \right)$ qui permet d'avoir l'algorithme suivant:
+    
+    	\begin{algorithm}[H]
+        	\caption{Descente de gradient projeté}
+        	\label{alg:desgrad2}
+        	\begin{algorithmic}[1]
+        	\REQUIRE fonction $f$, fonction de projection $P$
+        	\STATE Initialiser $x_0$, $s_0$, $t=0$;
+        	\REPEAT
+        	\STATE $x^{k+1} = P\left( x^k - s^k \bigtriangledown f(x^k) \right)$
+        	\STATE $t=t+1$
+        	\UNTIL{ convergence }
+        	\STATE retourner $x^t$
+        	\end{algorithmic}
+    	\end{algorithm}
+    
+    	Des versions de cet algorithme sont nées au cours des années pour améliorer sa vitesse de convergence, tel que l'algorithme ADMM, qui s'est non seulement inspiré de lui mais aussi des méthodes de résolution analytique couramment utilisées comme la méthode de lagrange.
+   	 
+	\section{Algorithme et Méthode ADMM}
+    
+    	%% historique et références premières de l'algorithme
+    	L'algorithme ADMM (Alternating Direction Method of Multipliers) est un algorithme d'optimisation numérique qui s'est appuyé sur les travaux de Glowinski et al. de l'article \cite{glowinski1975approximation}, et a été brièvement présenté par Boyd et al. dans l'article de référence \cite{boyd2011distributed}.
+
+    	%% Description du problème standard résolu par l'algorithme (en donnant l'algorithme)
+    	Soit le problème d'optimisation suivant:
+    	\begin{equation}
+        	\label{equa:admm1}
+        	\begin{aligned}
+            	& \min_{x, y} f(x) + g(y)  \\
+            	& \text{ s.t $Ax+ By = c$}
+        	\end{aligned}
+    	\end{equation}
+   	 
+    	L'algorithme ADMM résout itérativement ce problème en s'inspirant de la descente de gradient via l'expression de récurrence qui suit avec $\mathcal{L}_\rho (x,y, \lambda)$ étant le lagrangien augmenté et $\rho$ un pas de descente.
+    	\begin{equation*}
+        	\left\{  
+            	\begin{aligned}
+                	& x^{k+1} = \arg\min_{x} \mathcal{L}_\rho (x,y^{k}, \lambda^{k}) \\
+                	& y^{k+1} = \arg\min_{y} \mathcal{L}_\rho (x^{k+1},y, \lambda^{k}) \\
+                	& \lambda^{k+1} = \lambda^{k} + \rho \bigtriangledown_\lambda \mathcal{L}_\rho (x^{k+1},y^{k+1}, \lambda)
+            	\end{aligned}
+        	\right.
+    	\end{equation*}
+    	avec $\mathcal{L}_\rho (x,y, \lambda)=f(x) + g(y) + \lambda^T(Ax + By - c) + \frac{\rho}{2}{\| Ax + By - c \|}^2_2$, $\rho > 0$
+   	 
+    	Après avoir posé $u = \frac{\lambda}{\rho}$ et simplifié l'équation précédente, on a :
+    	\begin{equation}
+        	\label{equa:admm2}
+        	\left\{  
+            	\begin{aligned}
+                	& x^{k+1} = \arg\min_{x} f(x) + \frac{\rho}{2}{\| Ax + By^k - c + u^k\|}^2_2 \\
+                	& y^{k+1} = \arg\min_{y} g(y) + \frac{\rho}{2}{\| Ax^{k+1} + By - c + u^k\|}^2_2 \\
+                	& u^{k+1} = u^{k} + Ax^{k+1} + By^{k+1} - c
+            	\end{aligned}
+        	\right.
+    	\end{equation}
+   	 
+    	D'où l'algorithme suivant:
+    	\begin{algorithm}[H]
+        	\caption{Algorithme ADMM}
+        	\label{alg:admm1}
+        	\begin{algorithmic}[1]
+        	\REQUIRE fonction $f$, fonction $g$
+        	\STATE Initialiser $x_0$, $y_0$, $u_0$, $t=0$;
+        	\REPEAT
+        	\STATE $x^{k+1} = \arg\min_{x} f(x) + \frac{\rho}{2}{\| Ax + By^k - c + u^k\|}^2_2 $
+        	\STATE $y^{k+1} = \arg\min_{y} g(y) + \frac{\rho}{2}{\| Ax^{k+1} + By - c + u^k\|}^2_2$
+        	\STATE $u^{k+1} = u^{k} + Ax^{k+1} + By^{k+1} - c$
+        	\STATE $t=t+1$
+        	\UNTIL{ convergence }
+        	\STATE retourner $x^t$, $y^t$
+        	\end{algorithmic}
+    	\end{algorithm}
+   	 
+    	%% Conversion d'un problème standard d'optimisation en un problème resolvable par l'algorithme ADMM
+    	De ce fait, resoudre le problème d'optimisation \ref{equa:admm1} revient à resoudre itérativement la suite de problème \ref{equa:admm2}, ce qui permet d'affirmer que pour resoudre le problème d'optimisation suivant
+    	\begin{equation*}
+        	\begin{aligned}
+            	& \min_{x} f(x) \\
+            	& \text{s.t  $x \in \chi = \left\{x\ |\ h(x) = 0, g(x) <= 0 \right\} $}
+        	\end{aligned}
+    	\end{equation*}
+    	par l'algorithme ADMM on peut introduire une variable $y$, de sorte que $f$ soit séparable en deux fonctions $f_1$ et $f_2$ comme suit:
+    	\begin{equation*}
+        	\begin{aligned}
+            	& \min_{x,y} f_1(x) + f_2(y) \\
+            	& \text{s.t  $x \in \chi_1$, $y \in \chi_2$, $Ax+ By = c$} \\
+            	& \text{avec $\chi = \chi_1 \cup \chi_2$}
+        	\end{aligned}    
+    	\end{equation*}
+    	avec $A$, $B$ et $c$ donné de tel sorte que $x,y \in \chi$, et ainsi par la suite résoudre le problème obtenu soit analytiquement, soit itérativement via l'expression de récurrence suivante :
+    	\begin{equation*}
+        	\left\{  
+            	\begin{aligned}
+                	& x^{k+1} = \arg\min_{x} f_1(x) + \frac{\rho}{2}{\| Ax + By^k - c + u^k\|}^2_2 \text{,  s.t $x \in \chi_1$} \\
+                	& y^{k+1} = \arg\min_{y} f_2(y) + \frac{\rho}{2}{\| Ax^{k+1} + By - c + u^k\|}^2_2 \text{,  s.t $y \in \chi_2$}\\
+                	& u^{k+1} = u^{k} + Ax^{k+1} + By^{k+1} - c
+            	\end{aligned}
+        	\right.
+    	\end{equation*}
+     
+            Il faut noter que $f_1(x)$ ou $f_1(x)$ peut égale à zero si la fonction $f$ n'est pas séparable.
+            
+
+    	Cette algorithme a connu jusqu'à lors beaucoup d'améliorations liées à la vitesse de convergence et la prise en charge des problèmes d'apprentissage en ligne (online), dont on peut citer quelques références d'articles sources \cite{ouyang2013stochastic} \cite{wang2013online}. Pour des problèmes d'apprentissage courants, il existe des versions stochastiques, linéaires et "online" de cet algorithme.
+
+	\section{Exemples d'utilisation de l'algorithme ADMM}
+    	Il existe énormement de problème d'optimisation qui peuvent être résolu en utilisant l'approche de l'algorithme ADMM dont nous pouvons explorer:
+        	\subsection*{Exemple 1}
+            	Soit le problème d'optimisation à ensemble de contraintes suivant
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{x} f(x) \\
+                    	& \text{ s.t  $x \in \mathcal{C}$ }
+                	\end{aligned}
+            	\end{equation*}
+            	où $\mathcal{C}$ est l'ensemble des contraintes.
+           	 
+            	On peut rendre ce problème resolvable par l'algorithme ADMM en celui suivant
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{x} f(x) + g(z) \\
+                    	& \text{ s.t  $x - z = 0$, $z \in \mathcal{C}$ }
+                	\end{aligned}
+            	\end{equation*}
+            	où $g(z) = 0$, et résoudre ainsi itérativement le problème via l'expression de récurrence
+            	\begin{equation*}
+                	\left\{  
+                    	\begin{aligned}
+                        	& x^{k+1} = \arg\min_{x} f(x) + \frac{\rho}{2}{\| x + z^k + u^k\|}^2_2 \\
+                        	& z^{k+1} = \arg\min_{z} {\| x^{k+1} - z + u^k\|}^2_2 \text{, s.t $z \in \mathcal{C}$ (ce qui correspond à une projection)}\\
+                        	& u^{k+1} = u^{k} + x^{k+1} - z^{k+1}
+                    	\end{aligned}
+                	\right.
+            	\end{equation*}
+            	Ce qui revient à résoudre itérativement le problème via l'expression de récurrence
+            	\begin{equation*}
+                	\left\{  
+                    	\begin{aligned}
+                        	& x^{k+1} = \arg\min_{x} f(x) + \frac{\rho}{2}{\| x + z^k + u^k\|}^2_2 \\
+                        	& z^{k+1} = \mathcal{P}_\mathcal{C}(x^{k+1} + u^k)\\
+                        	& u^{k+1} = u^{k} + x^{k+1} - z^{k+1}
+                    	\end{aligned}
+                	\right.
+            	\end{equation*}
+            	avec $\mathcal{P}_\mathcal{C}$ étant la fonction de projection sur l'ensemble $C$
+
+        	\subsection*{Exemple 2 : Problème de régression linéaire}
+       	 
+            	Le problème d'optimisation issue de la régression linéaire peut être vue généralement comme le problème suivant
+            	\begin{equation*}
+                	\min_{x} \frac{1}{2}{\| Ax + b \| }_2^2 + \lambda r(x)
+            	\end{equation*}
+            	où $f$ est la fonction d'erreur de classification, $\lamda$ est une constante et $r(x)$ est une fonction de régularisation qui permet de mettre en évidence l'erreur de ne pas vérifier une ou plusieurs contraintes, (si $r(x)=0$ alors il n'y a pas d'erreur de contraintes).
+           	 
+            	On peut rendre ce problème resolvable par l'algorithme ADMM par la transformation suivante
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{x} \frac{1}{2}{\| Ax + b \| }_2^2 + \lambda r(z) \\
+                    	& \text{ s.t  $x - z = 0$ }
+                	\end{aligned}
+            	\end{equation*}
+
+        	\subsection*{Exemple 3: Problème de consensus}
+       	 
+            	Les problèmes de consensus sont généralement définis plus comme suit
+            	\begin{equation*}
+                	\min_{x} \sum_{i=1}^{N} f_i(x) + \lambda r(x)
+            	\end{equation*}
+            	où, $\lambda$ est une constante et $r(x)$ est une fonction de regularisation.
+            	On peut rendre ce problème resolvable par l'algorithme ADMM par la transformation suivante
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{x_i,z} \sum_{i=1}^{N} f_i(x_i) + \lambda r(z) \\
+                    	& \text{ s.t  $x_i - z = 0$ }
+                	\end{aligned}
+            	\end{equation*}
+
+        	\subsection*{Exemple 4: Problème avec une contrainte d'égalité liant toutes les variables}
+           	 
+            	Soit le problème suivant
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{x} \sum_{i=1}^{N} f_i(x_i) \\
+                    	& \text{ s.t  $\sum_{i=1}^{N} x_i = 0$ }
+                	\end{aligned}
+            	\end{equation*}
+           	 
+            	Ce problème est déjà résolvable par l'algorithme ADMM suivant l'expression de récurrence
+            	\begin{equation*}
+                	\left\{  
+                    	\begin{aligned}
+                        	& x^{k+1}^i = \arg\min_{x} f_i(x) + \frac{\rho}{2}{\| x^i - x^k^i + \overline{x}^{k+1} + u^k\|}^2_2 \\
+                        	& u^{k+1} = u^{k} + \overline{x}^{k+1}
+                    	\end{aligned}
+                	\right.
+            	\end{equation*}
+           	 
+        	\subsection*{Exemple 5}
+            	Soit le problème d'optimisation suivant
+            	\begin{equation*}
+                	\min_{X} \textbf{Tr}(SX) - log(\det(X)) + \lambda r(X)
+            	\end{equation*}
+            	On peut rendre ce problème resolvable par l'algorithme ADMM par la transformation suivante:
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{X} \textbf{Tr}(SX) - log(\det(X)) + \lambda r(Z) \\
+                    	& \text{ s.t  $X - Z = 0$ }
+                	\end{aligned}
+            	\end{equation*}
+            	Et ainsi le résoudre itérativement par l'expression de récurrence
+            	\begin{equation*}
+                	\left\{  
+                    	\begin{aligned}
+                        	& X^{k+1} = \arg\min_{X} f(X) + \frac{\rho}{2}{\| X + Z^k + U^k\|}^2_F \\
+                        	& Z^{k+1} = \arg\min_{Z} \lambda r(Z) + \frac{\rho}{2}{\| X^{k+1} + Z + U^k\|}^2_F \\
+                        	& U^{k+1} = U^{k} + X^{k+1}-Z^{k+1}
+                    	\end{aligned}
+                	\right.
+            	\end{equation*}
+           	 
+        	\subsection*{Exemple 6: Problème de factorisation matricielle NMF}
+            	Soit le problème d'optimisation suivant
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{W,H} \frac{1}{2} {\| X - WH \|}_F^2   \\
+                    	& \text{ s.t  $W \geq 0$, $H \geq 0$ }
+                	\end{aligned}
+            	\end{equation*}
+            	On peut rendre ce problème resolvable par l'algorithme ADMM par la transformation suivante
+            	\begin{equation*}
+                	\begin{aligned}
+                    	& \min_{W,H} f(W,H) = \frac{1}{2}\| X - WH \| \\
+                    	& \text{ s.t  $W - Z_1 = 0$, $H - Z_2 = 0$, $Z_1 \geq 0$, $Z_2 \geq 0$}
+                	\end{aligned}
+            	\end{equation*}
+            	Et ainsi le résoudre itérativement via l'expression de récurrence
+            	\begin{equation*}
+                	\left\{  
+                    	\begin{aligned}
+                        	& W^{k+1} = \arg\min_{X} f(W,H^k) + \frac{\rho}{2}{\| W - Z_1^k + U_1^k\|}^2_F \\
+                        	& Z_1^{k+1} = \arg\min_{Z} {\| W^{k+1} - Z + U_1^k\|}^2_F = max(0, W^{k+1} + U_1^k)\\
+                        	& U_1^{k+1} = U_1^{k} + W^{k+1} - Z_1^{k+1} \\
+                        	& H^{k+1} = \arg\min_{H} f(W^{k+1},H) + \frac{\rho}{2}{\| H - Z_2^k  + U_2^k\|}^2_F \\
+                        	& Z_2^{k+1} = \arg\min_{Z} {\| H^{k+1} - Z + U_2^k\|}^2_F = max(0, H^{k+1} + U_2^k)\\
+                        	& U_2^{k+1} = U_2^{k} + H^{k+1} - Z_1^{k+1} \\
+                    	\end{aligned}
+                	\right.
+            	\end{equation*}
+           	 
+            	Pour ce problème plus particulièrement les auteurs Sun, Dennis L and Fevotte, Cedric dans l'article de référence \cite{sun2014alternating} ont proposé une version de l'algorithme ADMM.
+           	 
+\section{Conclusion}
+	En somme, il était question pour nous de présenter l'algorithme ADMM et de donner des exemples d'utilisations de cette dernière.
+	Nous notons que cette algorithme pourrait permettre de résoudre des problèmes d'optimisation tel que la maximisation du logarithme de vraisemblance, la minimisation des erreurs d'un modèle de prédiction, de classification, de regroupement plus spécifiquement sur des données multivues lorsqu'on cherche une représentation unifié dit de consensus.
+	Nous nous rendons également compte que l'introduction des variables et l'utilisation des fonctions de régularisation favorisent la parallélisation de l'optimisation d'une fonction objective avec des contraintes données.
+	Est ce qu'il serait possible d'introduire des variables fictives pour paralléliser l'entraînement des modèles du Machin Learning et plus précisément du deepLearing.
+   	 
+   	 
+\include{biblographi.tex}
+\end{document}

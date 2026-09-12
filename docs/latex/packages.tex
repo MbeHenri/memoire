@@ -1,0 +1,136 @@
+% package de langues 
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% package pour référence de liens sur pdf 
+\usepackage[pdftex]{hyperref} % liens
+\usepackage{lastpage} % numéro de page
+\usepackage{caption}
+
+% package de formes de document 
+\usepackage[left=2.5cm,
+              right=2.5cm,
+              top=2.5cm,
+              bottom=2.5cm
+             ]{geometry}
+% pour les tableaux 
+\usepackage{array,multirow,makecell} 
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash }b{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash }b{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash }b{#1}}
+
+% package pour la page de couverture 
+\usepackage{graphicx}
+\usepackage[cyr]{aeguill}
+\usepackage{fancyheadings}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{eso-pic}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+
+% nouvelle commande pour la forme 
+%\fancyhf[OFC]{\thepage / \pageref{LastPage}}
+\rfoot{\thepage / \pageref{LastPage}}
+%\setcounter{tocdepth}{3}
+
+% pakages de couleurs du document
+\usepackage{color}
+\usepackage{xcolor}
+
+
+% package pour la chimie
+\usepackage[version=4]{mhchem}
+
+
+% package pour la visualisation du code
+\usepackage{listings}
+\definecolor{darkWhite}{rgb}{0.94,0.94,0.94}
+ 
+\lstset{
+  aboveskip=3mm,
+  belowskip=-2mm,
+  backgroundcolor=\color{darkWhite},
+  basicstyle=\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{red},
+  deletekeywords={...},
+  escapeinside={\%*}{*)},
+  extendedchars=true,
+  framexleftmargin=16pt,
+  framextopmargin=3pt,
+  framexbottommargin=6pt,
+  frame=tb,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  language=python,
+  literate=
+  {²}{{\textsuperscript{2}}}1
+  {⁴}{{\textsuperscript{4}}}1
+  {⁶}{{\textsuperscript{6}}}1
+  {⁸}{{\textsuperscript{8}}}1
+  {€}{{\euro{}}}1
+  {é}{{\'e}}1
+  {è}{{\`{e}}}1
+  {ê}{{\^{e}}}1
+  {ë}{{\¨{e}}}1
+  {É}{{\'{E}}}1
+  {Ê}{{\^{E}}}1
+  {û}{{\^{u}}}1
+  {ù}{{\`{u}}}1
+  {â}{{\^{a}}}1
+  {à}{{\`{a}}}1
+  {á}{{\'{a}}}1
+  {ã}{{\~{a}}}1
+  {Á}{{\'{A}}}1
+  {Â}{{\^{A}}}1
+  {Ã}{{\~{A}}}1
+  {ç}{{\c{c}}}1
+  {Ç}{{\c{C}}}1
+  {õ}{{\~{o}}}1
+  {ó}{{\'{o}}}1
+  {ô}{{\^{o}}}1
+  {Õ}{{\~{O}}}1
+  {Ó}{{\'{O}}}1
+  {Ô}{{\^{O}}}1
+  {î}{{\^{i}}}1
+  {Î}{{\^{I}}}1
+  {í}{{\'{i}}}1
+  {Í}{{\~{Í}}}1,
+  morekeywords={*,...},
+  numbers=left,
+  numbersep=10pt,
+  numberstyle=\tiny\color{black},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=1,
+  stringstyle=\color{gray},
+  tabsize=4,
+  title=\lstname,
+}
+
+%package pour les algorithmes
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath}
+
+% package pour les tableaux
+\usepackage{longtable}
+\usepackage{booktabs}
+
+% package pour les figures 
+\usepackage{subcaption}
+
+% package de reférencement
+% \usepackage[backend=biber,safeinputenc, sorting=none]{biblatex}
+
+% mettre la bibliographie dans la table de matières
+%\usepackage[nottoc, notlof, notlot]{tocbibind}

@@ -1,0 +1,11 @@
+\chapter*{Abstract}
+
+
+
+
+In the field of natural product-based drug discovery, identifying the active compounds within these products is a challenging task. Scientists rely on lab experiments and use techniques like mass spectrometry (MS) and nuclear magnetic resonance (NMR) to get usable representations of molecules that have already been identified. These representations help build molecular networks.
+Tools like GNPS and MADByTE, which process MS and NMR spectra respectively, are used to build these networks by grouping similar molecules and showing how they are connected. These connections guide further chemical experiments to identify unknown compounds.
+However, current methods do not take advantage of the complementary information provided by MS and NMR together. This study explores how ensemble learning can help, by combining GNPS, MADByTE, and multi-view clustering algorithms like MCLES or MVGL. These algorithms can learn from multiple data views while considering both complementary features and consensus patterns.
+To extract clusters from the GNPS and MADByTE networks for the learning process, we use the DBSCAN algorithm, defining molecular neighborhoods in each network. Using a Bagging-based approach on the MSRC-V1 dataset, we achieved strong results with MCLES as the weak-learner: 80.1\% accuracy, 74.3\% normalized mutual information, and 81.1\% purity in cluster formation.
+
+\keywords{\uline{Keywords}}{ensemble learning, multi-view clustering, spectrometry, molecular network, drug discovery.}

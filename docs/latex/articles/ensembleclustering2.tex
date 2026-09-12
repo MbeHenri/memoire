@@ -1,0 +1,70 @@
+
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Lecture 7: Clustering Ensemble(Ordre priorité)}
+    {Jing Gao, SUNY Buffalo}
+    
+    \tableofcontents
+    \vspace{20cm}
+    \section{Contexte}
+    Afin de choisir un algorithme d'ensemble de clustering pour combiner GNPS et MADByTE, 
+    il est important de définir un ordre de priorité sur les types d'algorithmes d'ensemble de clustering.
+    Cette ordre de priorité doit etre définir un s'appuyant sur un ensemble d'observations des propriétés des algorithmes à l'égard
+    de l'objectif visé et des réalisés en pratique. Dans les lignes qui suivent nous allons donnée un ensemble de ces observations et fournir cette ordre 
+    de priorité des algorihtmes d'ensemble de clustering qui peuvent etre utilisés.
+
+
+    \section{Observations et ordre de priorité}
+
+    Les algorithmes d'ensemble de clustering qui peuvent être utiliser pour combiner GNPS et MADByTE d'après nos lectures sont:
+    \begin{itemize}
+        \item algorithmes basés sur les observations
+        \item algorithmes basés sur les clusters
+        \item algorithmes basés sur les deux
+    \end{itemize}
+
+    Comme observations sur les algorihtmes basés sur les observations, nous avons :
+    \begin{itemize}
+        \item Il est probable d'après les opérations qu'ils utilisent qu'ils prennent beaucoup de temps lorsqu'on a beaucoup d'observations
+        \item Ils ne tiennent pas compte des ressemblances entre les clusters des différents weak-learners
+        \item Ils sont forcement sensibles à une grande variabilité de la constitution des clusters des différents weak-learners
+        \item Les nouveaux regroupements de observations utilisés, ne correspondent pas vraiment à L'idée intuitif du vote du cluster pour une observation
+    \end{itemize}
+    
+    Comme observations sur les algorithmes basés sur les clusters, nous avons :
+    \begin{itemize}
+        \item Les opérations qu'ils utilisent touchent particulièrement les clusters qui sont en nombre inférieur aux observations
+        \item Ils ne tiennent pas compte des assignations commune entre deux observations aux clusters de base
+        \item Ils sont forcément moins sensibles à une grande variabilité de la constitution des clusters des différents weak-learners
+        \item Ils adhèrent mieux à L'idée intuitif du vote du cluster pour une observation
+    \end{itemize}
+
+    Comme observations sur les algorithmes basés sur les deux, nous avons:
+    \begin{itemize}
+        \item Ils tiennent compte des assignations commune entre deux observations aux clusters de base
+        \item Ils tiennent compte des clusters de base, sans pour autant tenir compte de la correspondance entre les clusters
+        \item Ils sont forcement sensibles à une grande variabilité de la constitution des clusters des différents weak-learners
+        \item Les nouveaux regroupements de observations utilisés, ne correspondent pas vraiment à L'idée intuitif du vote du cluster pour une observation
+    \end{itemize}
+
+    De plus, au cour la lecture de l'article \cite{strehl2002cluster}, l'algorithme HGPA était moins performant, que les algorithmes CSPA et MCLA.
+
+    De ces observations, nous pouvons donner l'ordre de priorité suivante:
+    \begin{itemize}
+        \item algorithmes basés sur les clusters
+        \item algorithmes basés sur les observations
+        \item algorithmes basés sur les deux
+    \end{itemize}
+
+\bibliographystyle{plain}
+    \bibliography{reference_GNPS_MADByTE}
+\end{document}

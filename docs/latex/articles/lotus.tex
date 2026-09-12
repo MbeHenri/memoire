@@ -1,0 +1,79 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {The LOTUS initiative for open natural products research : knowledge management
+through Wikidata}
+    {}
+    \tableofcontents
+    \vspace{20cm}
+    
+    \section{Contexte et description de l'article}
+    Au cours des dernières années, les recherches conduisant à l'élucidation de structures de molécules contenues dans les organismes comme certains produits naturels, on permet de voir apparaître différentes sources de données hétérogènes contenant des paires structure-organisme.
+	Dans le but de créer un système capable de fédérer de telles sources de données pour construire une base globale contenant les références et structures des organismes, les auteurs de l'article de référence \cite{rutz2021lotus}, ont proposé le système LOTUS qui sera sujet de ce document.   
+
+	Comme information sur l'article nous avons:
+    \begin{itemize}
+   	 \item \textbf{titre}: {The LOTUS initiative for open natural products research: knowledge management through Wikidata}
+   	 \item \textbf{auteurs}: {Rutz, Adriano and Sorokina, Maria and Galgonek, Jakub and Mietchen, Daniel and Willighagen, Egon and Gaudry, Arnaud and Graham, James G and Stephan, Ralf and Page, Roderic and Vondr{\'a}{\v{s}}ek, Ji{\v{r}}{\'\i} and others}
+   	 \item \textbf{journal}:{BioRxiv}
+   	 \item \textbf{année}: {2021}
+    \end{itemize}
+
+	\section{Workflow de LOTUS}
+	Comme décrit plus haut, LOTUS permet de construire une base de données de \textbf{graphe} incluant les références et structures de molécules d'organismes de plusieurs sources de données.
+	Plus précisément il contient pour une molécule:
+	\begin{itemize}
+    	\item un objet de structure chimique : associé aux possibles représentations SMILE, InChi et InChiKey de la molécule
+    	\item un objet d'organisme biologique : contenant le type ou encore la famille de l'organisme (taxon), la base de données où çà été décrite et l'identifiant de cette famille dans cette base.
+    	\item un objet de référence : décrivant la paire structure-organisme avec les DOI(Digital Object Identifier), PMID (PubMed Identifier) ou PMCID (PubMed Identifier) de l'article associé.
+	\end{itemize}
+    
+	Pour pouvoir atteindre son objectif, LOTUS suis le workflow présent sur la figure \ref{fig:lotus} en les étapes suivantes
+	\begin{figure}
+        \centering
+        \includegraphics[width = \linewidth]{Images/lotus.png}
+        \caption{Workflow de LOTUS \cite{rutz2021lotus}}
+        \label{fig:lotus}
+    \end{figure}
+
+	\subsection{Harmonisation des données de différentes sources}
+	Cette étape consiste à rendre les données des sources externes en des paires structure-organisme utilisables.
+	De ce fait toutes les ressources publiques de produits naturelles incluses dans COCONUT, qui contiennent des paires structure-organisme référencées ont été considérées comme entrée initiale au système pour avoir une base de connaissances.
+	Ceux ayant des manques sont complétés par les paires structure-organisme référencées de COCONUT, ainsi que d'autres ressources comme Cyanometdb, Wakankensaku et etc\dots
+
+	\subsection{Prétraitement et validation des données harmonisées}
+	Cette étape consiste à transformer les données harmonisées en triplets d'objets de structures, d'organismes et de références tel que décrit ci dessus.
+	Par la suite, pour vérifier que les triplets sont valides dans le sens où les référencements sont corrects, en procédant manuellement ou automatiquement via un script écrit à cet effet qui montre de bonne performance de validation.
+	Ce script se base sur des règles qui utilisent les contraintes permettant de s'assurer qu'une entrée est considéré comme valide. Nous avons comme contraintes:
+	\begin{itemize}
+    	\item si la structure a été décrit dans la référence
+    	\item si l'organisme contenant était décrit dans la référence
+    	\item si la référence décrivait l'occurrence de la structure chimique de l'organisme biologique
+	\end{itemize}    
+
+	Après ces étapes, les triplets sont enregistrés dans une base de données "postgresql" permettant d'éviter qu'il n'y ai pas d'occurrence d'entrées valides.
+	De cette base, on peuple Wikidata avec les référencements obtenus et le graphe de connaissance de LOTUS après l'étape de dissémination suivante.
+
+	\subsection{Dissémination des données}
+	Cette étape consiste à introduire les données entrant dans la base interne "postgresql", dans le graphe de connaissance globale, contenu dans une base de données de graphe.
+	C'est ce graphe de connaissance qui est utilisé pour obtenir des réponses par interrogation, à des questions complexes sur des couples structure-organisme.
+
+	\section{Conclusion}
+    En définitive, il était question pour nous de présenter le workflow du système Lotus qui permet de construire une base de connaissance globale de références d’organismes.  
+    Nous pouvons noter que LOTUS est intéressant dans la mesure où le workflow prend en charge plusieurs sources de données pour construire un graphe de connaissance. On pourrait imaginer un système capable d’en plus, ajouter les déplacements chimiques des atomes (spectres RMN) et les spectres MS ou MS2 des différents organismes, pour réaliser des analyses encore plus poussées pouvant aider à l’élucidation de structures. De ce workflow nous pouvons noter que le principale inconvénient de LOTUS est l’utilisation d’un langage d'interrogation qui n’est pas aisément accessible par les utilisateurs finaux que sont les biologistes. Comment y remédier ?
+
+\bibliographystyle{plain}
+    \bibliography{reference_GNPS_MADByTE}
+\end{document}
+
+
+

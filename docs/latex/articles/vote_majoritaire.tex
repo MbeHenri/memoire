@@ -1,0 +1,87 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Idée de vote majoritaire et pond ́er ́e pour les mod`eles d’apprentissage
+par ensemble d’algorithmes de clustering}
+    {}
+	\tableofcontents
+	\vspace{20cm}
+    
+    \section{Introduction}
+    Dans le but de combiner GNPS et MADByTE à des algorithmes de clustering multi-vues, pour tenir compte de la complémentarité des spectres MS et RMN, on pourrait définir un modèle d’apprentissage par ensemble.
+Ce modèle doit pouvoir être capable de combiner des algorithmes de clustering fournissant un nombre fini de clusters ou non, pour obtenir un nombre fini de clusters.
+    	Pour le faire, il est important de définir comment le vote pondéré et le vote majoritaire vont se réaliser.
+   	A travers ce document, nous proposons un moyen de vote pondéré pour un modèle d'apprentissage par ensemble d'algorithmes de clustering de façon générale.
+
+    \section{Vote pondérée et majoritaire}
+   	 Considérons que pour caractériser les clusters finaux, chaque observation $i$ possède des poids pour chaque cluster $k$. 
+Notons $p_{i,:}$ le vecteur de ses poids qu’on va considérer comme son indicateur de cluster, où la $k$-eme composante correspond au poids pour le $k$-eme cluster.
+   	 
+   	 On peut considérer le fait qu'un weak-learner $w$ valide l'attribution d’indicateurs à deux observations $i$ et $j$ qui sont dans un même groupe (pour lui), si leurs indicateurs sont semblables.
+   	 De ce fait, il sera moins satisfait si la différence de ces indicateurs est grande, surtout s'il a un grande importance de vote. Ainsi le vote pour obtenir les indicateurs de deux observations peut se faire, en réduisant le plus possible la non satisfaction des weak-learners qui ont de grandes importances comparé à ceux qui en ont moins.
+
+   	 De là on peut quantifier la non satisfaction générale d'attribuer des indicateurs à deux observations $i$ et $j$, par $nS_{i,j}(P)$ défini comme suit, où $\lambda(w)$ correspond au poids d’importance du weak-learner $w$ pour le vote :
+   	 \begin{equation}
+   		 \begin{aligned}
+   			\\ & nS_{i,j}(P) = \sum_{w} \lambda(w) {\Vert p_{i,:} - p_{j,:} \Vert}_2^2 A_{i,j}(w)
+            \\ & A_{i,j}(w) = \begin{cases}
+                    1 & \text{ si $i \neq j$, l'observation $i$ et $j$ sont du même groupe d'apres le weak-learner $w$}  \\
+                    0 & \text{sinon} \\
+                \end{cases}
+   		 \end{aligned}
+   	 \end{equation}
+   	 D’où on a la non satisfaction globale $NS(P)$, étant:
+   	 \begin{equation}
+   		 \begin{aligned}
+   			 & NS(P) = \sum_{i,j,w} \lambda(w) {\Vert p_{i,:} - p_{j,:} \Vert}_2^2 A_{i,j}(w)
+   		 \end{aligned}
+   	 \end{equation}
+
+   	 Sachant qu'on souhaite avoir la plus petite possible non satisfaction globale $NS(P)$, et que les clusters ne doivent pas avoir de corrélation entre elle, on a le problème d'optimisation suivant à résoudre, où $n$ est le nombre d’observations et $k$ le nombre de clusters voulu :
+   	 \begin{equation}
+   		 \begin{aligned}
+   			 & \min_{P} \sum_{i,j,w} \lambda(w) {\Vert p_{i,:} - p_{j,:} \Vert}_2^2 A_{i,j}(w)
+   			 \\ & P \in \mathbb{R}^{n \times k} ,\ P^TP = I
+   		 \end{aligned}
+   	 \end{equation}
+     
+   	 Notons que la contrainte $P^TP = I$ permet de vérifier la non colinéarité entre deux différents clusters $k1$ (de vecteurs de poids $P_{:,k1}$) et $k2$ (de vecteurs de poids $P_{:,k2}$), car implique que $<P_{:,k1}, P_{:,k2}>=0$,
+   	 et permet également d'indiquer en bonus que les vecteurs de poids des clusters seront unitaires.
+   	 
+   	 En utilisant les conditions de KKT, on peut montrer que résoudre le problème revient à trouver les $k$ premiers vecteurs propres (correspondant aux vecteurs de poids des clusters) de la matrice $L$ défini comme suit:
+     \begin{equation}
+   		 \begin{aligned}
+   			L = \sum_w D(w) - A(w)
+            \\ D_{i,j}(w) = \begin{cases}
+                    \sum_j A_{i,j}(w) & \text{ si $i = j$}  \\
+                    0 & \text{sinon} \\
+                \end{cases}
+   		 \end{aligned}
+   	 \end{equation}
+
+   	 Après obtention de $P$, on pourra obtenir les clusters proprement dit, en utilisant l'algorithme KMEANS sur $P$, pour plusieurs  raisons:
+   	 \begin{itemize}
+   		 \item P correspond à une sorte de projection des observations l’espace des clusters, dont il est fort probable qu’on retrouve des groupes sphériques.
+   		 \item pour cette raison, il est le plus adéquat, car il est simple, rapide et efficace des algorithmes de clustering sur des groupes sphériques à nombre voulu.
+   		 \item il a été recommandé et expérimenté dans les articles de référence d'algorithme tel que MCLES, des algorithmes de clustering spectral multivues et à vue unique, et utiliser dans leur implémentation respectif
+   	 \end{itemize}
+
+   	 De façon analogue, on a le vote majoritaire, en considérant que les weak-learners ont des importances identiques pour le vote.
+
+    \section{Conclusion}
+    En somme, il était question pour nous de proposer un moyen de réaliser le vote pondéré et le vote majoritaire des clusters à nombre variable des weak-learners.
+    Nous pensons que si les modèles sont performants, on aura pas forcément de gain de performance.
+    Il serait important de définir des bons poids d'importance aux weak-learners, car si on donne plus d'importance à ceux moins bons, on aura forcément de mauvaises performances.
+	De ce fait, comment définir le fait qu’une observation a été mis dans un bon groupe?
+   
+\bibliographystyle{plain}
+	\bibliography{reference_GNPS_MADByTE}
+\end{document}

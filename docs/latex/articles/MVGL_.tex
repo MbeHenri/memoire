@@ -1,0 +1,173 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{../packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Graph Learning for Multiview Clustering}
+    {Kun Zhan, Changqing Zhang, Junpeng Guan, and Junsheng Wang}
+	\tableofcontents
+	\vspace{20cm}
+
+	\section{Introduction}
+	L'intégration du consensus et de la complémentarité de caractéristiques hétérogènes issues de plusieurs vues, a permis d'améliorer les performances de différents modèles d'apprentissage très connus comme KMEANS, EM, etc.
+	Ainsi différentes méthodes de clustering multi-vues ont vu le jour, à l'instar de ceux basées sur les graphes qui pour la plupart construisent les clusters et le graphe globale séparément.
+	Dans le but de les construire simultanément, les auteurs Kun Zhan et al. ont proposé dans l'article de référence \cite{zhan2017graph} l'algorithme MVGL qui sera sujet de ce document.
+    
+    \section{Algorithme MVGL}
+	Pour construire simultanément les clusters et le graphe locale, les auteurs de l'algorithme se sont inspirés de l'algorithme de clustering spectral, en apprenant des graphes pour chacune des vues et en les fusionnant par la suite pour obtenir un graphe globale.
+	En entrée, on a les données des vues avec le nombre de clusters, pour avoir en sortie un graphe de similarité des observations avec les clusters.
+    Comme on peut le voir sur les figures \ref{fig:mvgl1} et \ref{fig:mvgl2}
+	qui présentent le workflow de l'algorithme, on apprend d'abord des graphes de similarité pour chaque vue par apprentissage, puis on les fusionne pour obtenir le graphe global.
+
+	\begin{figure}
+   	 \centering
+   	 \includegraphics[width = \linewidth]{Images/mvgl2.png}
+   	 \caption{Workflow de l'algorithme MVGL}
+   	 \label{fig:mvgl1}
+    \end{figure}
+ 
+	\begin{figure}
+   	 \centering
+   	 \includegraphics[width = \linewidth]{Images/mvgl1.png}
+   	 \caption{Exécution du workflow de l'algorithme MVGL \cite{zhan2017graph}}
+   	 \label{fig:mvgl2}
+    \end{figure}
+
+    %Le choix d'apprendre des graphes pour chacune des vues a étant guidé par le fait que:
+    %\begin{itemize}
+    %    \item on pourrait calculer pour chacune des vues des indicateurs de clustering et leurs graphes associés
+    %    \item les graphes issues des métriques de similarités sont sensibles aux biais des vues utilisées
+    %    % > permet de s'assurer que chaque vue aura des graphes possédant "k" composantes connexes (clusters)
+    %    \item ces graphes ne possédaient pas forcement $k$ composantes connexes, ce qui permettrait de "faciliter" leur fusion
+    %\end{itemize}
+
+	Sachant qu'on a $V$ vues, et $k$ clusters à construire, considérons que chaque observation $j$ possède un vecteur indicateur de clusters $p_j$ à $k$ composantes où chaque composante correspond à un cluster.
+	On peut donc évaluer l'erreur d'allouer à des clusters deux observations connectées, comme étant la différence entre leurs vecteurs indicateurs, associée à leur similarité.
+	En minimisant  l'erreur totale de clustering étant la somme des différentes erreurs d'allocation de tous les couples d'observations, on calcule simultanément les indicateurs (qu’on peut voir comme l’indicateur de clusters) et la matrice de similarité.
+
+	%Plus formellement, on a l'erreur totale de clustering $f(S, P)$ comme suit,
+	%avec $S$ étant la matrice de similarité,
+	%$P$ la matrice indicateur,
+	%$L(S)$ étant le laplacien du graphe issu de $S$ égale à $D - \frac{S+S^T}{2}$ et
+	%$D$ étant la matrice dégré du graphe issu de S
+	%\begin{equation*}
+	%    f(S, P) = \sum_{i,j} {\|p_i-p_j\|}^2s_{ij} = Tr(P^TL(S)P)
+    %\end{equation*}
+
+	Ainsi pour apprendre les graphes pour chacune des vues, on va calculer itérativement la matrice de similarité qui minimise l'erreur totale de clustering, en évaluant la matrice constituée des vecteurs indicateurs de clusters vu comme l’indicateur de clusters.
+	Plus formellement pour chaque vue $v$, on construit un graphe de matrice de similarité $S^{(v)}$ en résolvant le problème d'optimisation suivant où
+    $S$ correspond à $S^{(v)}$,
+	$Q$ à l'indicateur de clusters pour la vue,
+	$L = D - \frac{(S + S^T)}{2}$ au laplacien du graphe avec $D$ étant la matrice de degré de $\frac{(S + S^T)}{2}$,
+    et $j$ étant l'indice d'un exemple.
+    
+	% Compte tenu du fait que les algorithmes spectraux ont un défaut particulier qui est celui de la sensibilité aux graphes d'origine des données, les auteurs ont optés pour l'apprentissage de graphe pour chacune des vues en utilisant sur les caractéristiques directement.
+	\begin{equation*}
+   	 \begin{aligned}
+   		 & \min_{Q,S} \sum_{i,j} {\|q_i-q_j\|}_2^2s_{ij} +  \beta \sum_{i,j} s_{ij}^2
+        	\\ & \text{s.t.}\ \forall j,\ \textbf{1}^Ts_{.j} = 1,\ s_j\geq0
+    	\end{aligned}
+    \end{equation*}
+    
+	Après simplification, on obtient le problème suivant:
+	\begin{equation}
+   	 \begin{aligned}
+   		 & \min_{Q,S} \text{Tr}(Q^TLQ) + \beta{||S||}_F^2
+        	\\ & \text{s.t.}\ \forall j,\ \textbf{1}^Ts_{.j} = 1,\ s_j\geq0
+        	\\ & Q \in \mathbb{R}^{n \times k} ,\ Q^TQ = I
+    	\end{aligned}
+   	 \label{equa:mvgl1}
+    \end{equation}
+
+    D'où l'algorithme suivant:
+    \begin{algorithm}[H]
+    	\caption{Algorithme d'apprentissage des graphes de chaque vue \cite{zhan2017graph}}
+    	\label{alg:mvgl1}
+    	\begin{algorithmic}[1]
+    	\REQUIRE Données d'entrée $X = \{ X^{(1)}, X^{(2)},\dots,X^{(V)} \}$, la constante de régularisation $\beta$, $k$ le nombre de clusters
+    	\STATE Initialiser pour chaque vue $v$, $Q^{(v)}$ en utilisant $X^{(v)}$,
+   	 \FOR{$v \in [1,V]$}
+        	\REPEAT
+   			 \STATE résoudre le problème \ref{equa:mvgl1} avec pour seul variable $S^{(v)}$
+            	\STATE résoudre le problème \ref{equa:mvgl1} avec pour seul variable $Q^{(v)}$
+        	\UNTIL{$S^{(v)}$ a $k$ composantes connexes}
+   	 \ENDFOR
+    	\STATE retourner $S$, $Q$
+    	\end{algorithmic}
+	\end{algorithm}
+    
+	Pour avoir le poids de l'arête entre deux observations dans le graphe global, on pourrait utiliser des pourcentages des poids des autres arêtes (entre ces deux observations) contenues dans les différents graphes obtenus pour chaque vue.
+	Ces pourcentages deviennent donc des poids d'influence des vues sur chaque arête du graphe global.
+	Pour pouvoir apprendre ces poids ainsi qu'une matrice indicatrice de clusters pour ce graphe globale, on vas :
+	\begin{itemize}
+    	\item minimiser l'erreur de calcul de ces poids d'influence et des poids des arêtes du graphe global, qui est évaluée comme la différence entre les poids des arêtes du graphe globale et ceux obtenu par applications des poids d'influence
+    	\item minimiser l'erreur d'allocation à des clusters des observations deux à deux du graphe global
+	\end{itemize}
+    
+    Ainsi plus formellement, pour construire le graphe unifié des graphes uniques à chaque vue, on résout le problème d'optimisation suivant, où
+    $A$ correspond à la matrice de similarité globale,
+	$P$ à l'indicateur de clusters globale pour la vue et
+    $W$ aux poids d'influence pour chacune des vues sur chacune des observations.
+
+	\begin{equation*}
+   	 \begin{aligned}
+   		 \min_{A,W,P} \sum_{i,j}^n {\left( a_{ij} - \sum_{v=1}^V w_{ij}^{(v)}s_{ij}^{(v)}\right)}^2 + \gamma \sum_{i,j} {\|p_i-p_j\|}_2^2a_{ij}
+        	\\ \text{s.t.}\ \forall j,\ \textbf{1}^Ta_{.j} = 1,\ a_{.j}\geq0,\ \sum_{v=1}^V w_{.j}^{(v)} = 1
+    	\end{aligned}
+    \end{equation*}
+	Après simplification, on obtient le problème suivant:
+	\begin{equation}
+   	 \begin{aligned}
+   		 & \min_{A,W,P} \sum_{i,j=1}^n {\left\| a_{.j} - \sum_{v=1}^V w_{.j}^{(v)}s_{.j}^{(v)}\right\|}_2^2 + \gamma \text{Tr}(P^TLP)
+        	\\ & \text{s.t.}\ \forall j,\ \textbf{1}^Ta_{.j} = 1,\ a_{.j}\geq0,\ \sum_{v=1}^V w_{.j}^{(v)} = 1
+        	\\ & P \in \mathbb{R}^{k \times n} ,\ P^TP = I
+    	\end{aligned}
+   	 \label{equa:mvgl2}
+    \end{equation}
+    
+	D'où l'algorithme suivant:
+    \begin{algorithm}[H]
+    	\caption{Algorithme d'apprentissage du graphe globale \cite{zhan2017graph} }
+    	\label{alg:mcles1}
+    	\begin{algorithmic}[1]
+    	\REQUIRE Les matrices de similarité des graphes des vues $S = \{ S^{(1)}, S^{(2)},\dots,S^{(V)} \}$, la constante de régularisation $\gamma$
+    	\STATE Initialiser $W = \frac{1}{V}$, $a_j = \sum_{v=1}^V w_j^{(v)}s_j^{(v)}$, $P$ en utilisant $A$
+    	\WHILE{il n'y a pas de convergence}
+        	\REPEAT
+            	\STATE résoudre le problème \ref{equa:mvgl2} avec pour seul variable $A$
+            	\STATE résoudre le problème \ref{equa:mvgl2} avec pour seul variable $P$
+        	\UNTIL{ A a $k$ composantes connexes }
+   	   	\STATE résoudre le problème \ref{equa:mvgl2} avec pour seul variables $W$
+    	\ENDWHILE
+    	\STATE retourner $A$,$P$,$W$
+    	\end{algorithmic}
+	\end{algorithm}
+	Pour résoudre l'ensemble des problèmes d'optimisation, on utilise les conditions de KKT.
+
+	\section{Observations}
+	% Avantages, inconvénients et Apport dans le mémoire
+	% Nous pouvons avoir comme remarques les avantages et limites qui sont regroupés dans le tableau ci- dessous.
+	Comme observations, nous avons:
+	\begin{itemize}
+    	\item { il y'a réduction de l'impact que peut avoir les biais des données d'origine}
+    	\item { on s'assure que les graphes uniques aux vues possèdent $k$ composantes connexes (pour rendre la fusion moins longue)}
+    	\item { on construit le graphe globale sans recalculer les graphes uniques aux vues }
+    	\item { l'influence du clustering finale n'influence pas les graphes de chaque vue }
+    	\item { on ne peut pas réutiliser les poids d'influence des vues sur de nouvelles observations }
+	\end{itemize}
+
+	\section{Conclusion}
+    En somme, il était question pour nous de présenter l'algorithme MVGL (Multiview clustering with Graph Learning) proposé par les auteurs permettant de construire simultanément l'indicateur de clusters et le graphe unifié des vues.
+	Cette approche s'est grandement inspirée des algorithmes de clustering multi vues spectrals qui permettent de construire un indicateur de clusters sans pour autant avoir besoin de calculer le graphe unifié.
+	Nous remarquons aussi que l'apprentissage des graphes de chaque vue ne dépend pas du calcul des clusters finaux.
+	Est-ce que cette prise en charge améliorerait les performances du modèle ?
+ 
+\bibliographystyle{plain}
+	\bibliography{reference_GNPS_MADByTE}
+\end{document}

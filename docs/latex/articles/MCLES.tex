@@ -1,0 +1,140 @@
+\documentclass[12pt, french, latin.medieval, a4paper]{report}
+\include{packages.tex}
+\include{page_couverture.tex}
+
+
+\author{MBE MBE MINDJANA LOIC HENRI}
+\title{GNPS et MDByTE}
+
+\begin{document}
+    
+    \pagecouverture
+    {Multi-View Clustering in Latent Embedding Space}
+    {Man-Sheng Chen et al.}
+    \tableofcontents
+    \vspace{20cm}
+    
+    \section{Introduction}
+	Les algorithmes de clustering multi-vues d'apprentissage de représentation utilisant les données des vues d'origines, s'appuient grandement sur la qualité des données pour définir de bon regroupement. Malheureusement il est très difficile d'obtenir des données de bonne qualité pour chacune de vues dans la vie courante. Par exemple pour que les spectres MS et RMN soient utilisables, il faudrait qu'ils suivent des étapes de prétraitement dans le but d'améliorer leur qualité (en retirant des pics indésirables en tenant compte des intervalles d'érreurs possibles). De ce fait la qualité des spectres est une limite à ces algorithmes de clustering. Dans le but de résoudre ce problème, les chercheurs Man Sheng et al. ont proposé l'approche MCLES (Multiview Clustering Latent Embedding Space) qui permet d'apprendre une représentation unifiée dans un espace intermédiaire, qui a conduit à l'article de référence \cite{mcles} et qui sera sujet de ce document. Dans les lignes qui suivent nous donnerons les informations relatives à l'article, ensuite nous présenterons l'approche proposée par les auteurs et nous terminerons par présenter l'évaluation de l'algorithme proposé.
+    
+	\section{Description de l'article}
+     	L'article \textbf{Multiview Clustering Latent Embedding Space} \cite{mcles} est né du besoin de réduire l'influence de la qualité de la donnée multivue d'entrée pour améliorer la qualité les regroupements. Les auteurs proposent d'apprendre une représentation unifiée des données dans un espace intermédiaire (latent) réduisant ainsi l'influence de la qualité d'origine. Comme informations liées à l'article nous avons:
+    	 
+    	\begin{itemize}
+        	\item \textbf{Titre}: Multiview Clustering Latent Embedding Space
+        	\item \textbf{Auteurs}: Man Sheng et al.
+        	\item \textbf{Année de publication}: 2020
+        	\item \textbf{Journal}: Proceedings of the AAAI Conference on Artificial Intelligence
+    	\end{itemize}
+
+	\section{Solution proposé}
+	Comme décrit ci dessous les auteurs proposent d'apprendre une représentation unifiée dans un espace latent, afin de calculer la matrice de similarité globale qui sera utilisée pour effectuer les regroupements.
+
+	Calculer la représentation unifiée revient à calculer entre guillemets les poids liés aux dimensions de chaque vue, de telle sorte qu'on puisse obtenir les données après application de ces poids sur la représentation unifiée. Plus formellement on a la formule de l'équation \ref{equa:mcles1} où $x_i^{(v)}$ est la donnée de la vue $v$ de l'observation $i$, $h_i$ est sa représentation unifiée et $W^{(v)}$ est la matrice des poids de la vue $v$.
+    
+	\begin{equation}
+    	x_i^{(v)} = W^{(v)} h_i
+    	\label{equa:mcles1}
+	\end{equation}
+    
+	En supposant que les observations sont vues comme des colonnes des matrices de données des vues, on a l'équation \ref{equa:mcles3}. On peut donc comprendre que la meilleure matrice de poids $W$ et la meilleure représentation $H$ seront obtenues par résolution du problème d'optimisation de l'équation \ref{equa:mcles3} où la contrainte permet d'éviter d'obtenir une représentation unifiée à petite valeur.
+    
+	\begin{equation}
+    	X = WH \text{ où } X = \begin{pmatrix} X^{(1)}\\X^{(2)}\\\vdots\\X^{(V)} \end{pmatrix}, W = \begin{pmatrix} W^{(1)}\\W^{(2)}\\\vdots\\W^{(V)}\end{pmatrix}
+    	\label{equa:mcles2}
+	\end{equation}
+
+	\begin{equation}
+    	\begin{aligned}
+        	\min_{W,H} {|| X - WH ||}_F^2 \text{  s.t. ${|| W_{:,j} ||}_2^2$} \\
+        	X = \begin{pmatrix} X^{(1)}\\X^{(2)}\\\vdots\\X^{(V)} \end{pmatrix}, W = \begin{pmatrix} W^{(1)}\\W^{(2)}\\\vdots\\W^{(V)}\end{pmatrix}
+    	\end{aligned}
+    	\label{equa:mcles3}
+	\end{equation}
+
+
+	Ayant la représentation unifiée, on devrait calculer la matrice de similarité entre les observations. Pour le faire, les auteurs s'appuient sur le fait qu'une observation est sensiblement égale à une combinaison linéaire des autres où les coefficients sont les similarités entre l'observation en question et les autres observations. 
+	On peut le comprendre car mathématiquement si on a plus de 4 points de données, chaque point peut etre écrit comme combinaison linéaire des autres. De plus si les coefficients correspondent aux similarités cela voudrait dire qu'on recherche les configurations qui vont se rapprocher le plus des points d'origine. 
+	Ainsi obtenir la matrice de similarité $S$ revient à résoudre le problème d'optimisation \ref{equa:mcles4}. Pour réguler l'apprentissage de la matrice $S$ on ajoute une pénalisation, ce qui permet d'obtenir le problème d'optimisation d'équation \ref{equa:mcles4}. 
+	Il faut noter que la condition $S_{:,j}\textbf{1}=1$ permet d'indiquer que pour l'observation $j$ on aura des coefficients de similarités étant les pourcentages d'utilisation d'autres observations. 
+
+	\begin{equation}
+    	\begin{aligned}
+        	\min_{S} {|| H - HS ||}_F^2 \text{  s.t. $S_{:,j}\textbf{1}=1$, $0\leq S \leq1$}
+    	\end{aligned}
+    	\label{equa:mcles4}
+	\end{equation}
+
+	\begin{equation}
+    	\begin{aligned}
+        	\min_{S} {|| H - HS ||}_F^2 + \beta {|| S ||}_F^2 \\
+        	\text{  s.t. $S_{:,j}\textbf{1}=1$, $0\leq S \leq1$}
+    	\end{aligned}
+    	\label{equa:mcles5}
+	\end{equation}
+
+	Dans le but d'obtenir des indicateurs de clusters, les auteurs ont utilisé l'approche de clustering spectrale qui consiste à trouver la matrice $P$ qui permet de résoudre le problème d'optimisation d'équation \ref{equa:mcles6} où $L_S$ est le laplacien de la matrice de similarité S communément égale à $D - \frac{S+S^T}{2}$ avec $D$ étant la matrice de dégré du graphe issue de $S$.
+
+	\begin{equation}
+    	\begin{aligned}
+        	\min_{P} Tr(P^TL_SP)  \text{  s.t. $P^TP =I$}
+    	\end{aligned}
+    	\label{equa:mcles6}
+	\end{equation}
+
+	On obtient finalement le problème global d'optimisation d'équation \ref{equa:mcles7}.
+	\begin{equation}
+    	\begin{split}
+        	& \min_{W,H,S,P}  \underbrace{ {|| X - WH ||}_F^2 }_{\text{apprentissage de l'espace latent}}  + \underbrace{ \alpha{|| H - HS ||}_F^2 + \beta {|| S ||}_F^2 }_{\text{apprentissage de la matrice globale}} + \underbrace{ \gamma Tr(P^TL_SP) }_{\text{apprentissage de l'indicateur de clusters}} 
+            \\
+        	&\quad \text{  s.t. ${|| W_{:,j} ||}_2^2$ , }
+        	\text{$S_{:,j}\textbf{1}=1$, $0\leq S \leq1$ ,}
+        	\text{$P^TP =I$}
+    	\end{split}
+    	\label{equa:mcles7}
+	\end{equation}
+
+	Pour resoudre ce problème les auteurs ont proposé l'algorithme d'optimisation \ref{alg:mcles1}.
+    	\begin{algorithm}[H]
+        	\caption{Algorithme d'optimisation MCLES \cite{mcles}}
+        	\label{alg:mcles1}
+        	\begin{algorithmic}[1]
+        	\REQUIRE Données d'entrée $X$, les constantes de régularisations $\alpha$, $\beta$, $\gamma$, la dimension de l'espace latent $d$, $k$ le nombre de cluster
+        	\STATE Initialiser H, P, $W = 0$, $S = 0$
+        	\REPEAT
+            	\STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable W ($\alpha$, $\beta$, $\gamma$ ne sont pas considérées)
+            	\STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable H ($\beta$, $\gamma$ ne sont pas considérées)
+            	\STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable S ($\gamma$ n'est pas considéré)
+            	\STATE résoudre le problème \ref{equa:mcles7} avec pour seul variable P (clustering spectral)
+        	\UNTIL{ convergence }
+        	\STATE retourner W,H,S,P
+        	\end{algorithmic}
+    	\end{algorithm}
+
+	Pour résoudre l'équation \ref{equa:mcles7} en considérant comme unique variable $W$, les auteurs ont utilisé le principe de l'algorithme ADMM (Alternating Direction Method of Multipliers) construit par Cu et al. 2014 d'après eux. Il est généralement utilisé pour résoudre des problèmes d'optimisation convexes complexes, en des problèmes plus légés en introduisant des variables $G$ qui serviront de balises pour obtenir la solution au problème d'optimisation itérativement. Il fera l'objet d'un autre document.
+
+	Pour faire de même pour $H$ et $S$ par la suite, on suit l'optimisation par les conditions de KKT. Ce qui conduit pour $H$ à une équation de sylvester($AX+BX=C$) et pour $S$ à des problèmes d'optimisation quadratique.
+    
+	\section{Evaluations}
+	Pour évaluer le modèle, les auteurs ont choisi comme métrique l'exactitude, l'information mutuelle normalisé et de pureté; comme dataset d'évaluation Yale, MSRCv1, ORL et BBCSport, et ont exécuté l'algorithme proposé et les algorithmes les plus performant de l'état de l'art 20 fois sur ces datasets. Les résultats des auteurs sont assez impressionnants et démontrent que l'algorithme proposé par les auteurs est plus performant. Il faut aussi noter que la vitesse de convergence sur ces datasets est relativement grande. 
+	De plus les auteurs ont donné la complexité temporelle qui est égale à $O( {((\sum_v^V) d^{(v)})}^2 d + N^3 + d^3 + kN^2 )$ où $d^{(v)}$ est la dimension des données de la vue $v$ et N est le nombre d'observation qui est issue du calcul de ceux des optimisations des variables. 
+	$O( {((\sum_v^V) d^{(v)})}^2 d)$ correspond à la complexité de l'optimisation par rapport à $W$, $O(d^3)$ pour $H$, $O(N^3)$ pour $S$ et $O(kN^2)$ pour $P$.
+    
+	\section{Observations}
+	On a un ensemble d'observations qui sont les suivantes:
+	\begin{itemize}
+    	\item Les espaces métriques des observations pour chacune des vues ne sont pas pris en compte
+    	\item On accorde la meme importance à chacune des vues dans l'apprentissage de la représentation unifiée
+    	\item Les auteurs n'utilisent que l'algorithme spectral pour obtenir les indicateurs de clusters, Ce qui implique que le nombre de clusters $k$ doit être donné à l’avance
+	\end{itemize}
+
+	\section{Conclusion}
+	En somme, il était question pour nous de présenter l'algorithme MCLES tel que décrit par les auteurs, ainsi que les évaluations qui ont été faites pour mesurer la performance du modèle.
+	Plus particulièrement, il utilise la factorisation pour obtenir la représentation unifiée dans l'espace latent et ainsi par la suite exécuter l'algorithme de clustering spectral sur la matrice de similarité entre les observations. 
+	Cette approche ne prend pas en compte le fait que les vues peuvent correspondre à des espaces métriques différents car on utilise le meme type de factorisation pour chacune des vues.
+	D'où la question comment construire un modèle capable de tenir compte de cela dans le but d’obtenir une représentation unifiée associée à un espace métrique unifié en tenant compte des importances des différentes vues?
+    
+   
+\bibliographystyle{plain}
+    \bibliography{reference_GNPS_MADByTE}
+\end{document}

@@ -1,0 +1,15 @@
+\chapter*{R\'esum\'e}
+
+
+Dans le domaine de la découverte de médicaments basée sur les produits naturels, trouver les principes actifs contenus dans ses produits est une tâche ardue.
+Cette tâche basée sur des expérimentations faites en laboratoire, a conduit à l'utilisation de techniques de spectrométrie MS et MRN, pour obtenir des représentations exploitables pour la recherche d'un ensemble de molécules étant déjà identifiées et la construction d'un réseau de cet ensemble de molécules.
+Ce réseau obtenable en utilisant des méthodes tels que GNPS et MADByTE prenant en entrée des spectres MS et RMN respectivement, permet de regrouper des molécules similaires avec les liaisons de correspondance, qui après analyse oriente les expérimentations chimiques d'identification des molécules.
+Cependant aucune méthode existante n'exploite la complémentarité d'informations entre les spectres MS et RMN.
+Cette étude vise à l'exploiter en combinant grâce à l'apprentissage par ensemble les méthodes GNPS, MADByTE et les algorithmes de clustering multi-vues MCLES ou MVGL qui tiennent compte non seulement de la complémentarité mais aussi du consensus entre plusieurs représentations d’observations.
+Pour extraire les clusters contenus dans les réseaux issues de GNPS et de MADByTE pour les introduire dans les processus d’apprentissage, nous utilisons l'algorithme DBSCAN en définissant le voisinage d'une molécule pour chacun de leurs réseaux.
+Pour l'approche utilisant Bagging nous obtenons sur la dataset MSRC-V1 les meilleures performances de constructions de clusters avec MCLES comme weak-learner, affichant 80.1\% d'exactitude, 74.3\% d'information mutuelle normalisée et 81.1\% de pureté.
+
+
+\keywords{\uline{Mots clés}}{apprentissage par ensemble, clustering multivues, spectrométrie, réseau moléculaire, découverte de médicaments.}
+
+\justify
